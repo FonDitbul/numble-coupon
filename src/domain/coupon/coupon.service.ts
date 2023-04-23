@@ -1,9 +1,9 @@
 import { Coupon } from './coupon';
-import { CouponCreateIn } from './coupon.in';
+import { CouponCreateIn, CouponUpdateIn } from './coupon.in';
 
 export interface ICouponService {
   findAll: () => Promise<Coupon[]>;
   create: (couponCreateIn: CouponCreateIn) => Promise<Coupon>;
-  update: () => Promise<Coupon>;
+  update: (couponUpdateIn: CouponUpdateIn) => Promise<Coupon>;
   delete: () => Promise<Coupon>;
 }

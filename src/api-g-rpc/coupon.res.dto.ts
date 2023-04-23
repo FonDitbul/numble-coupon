@@ -4,4 +4,6 @@ export interface IFindAllRes {
   coupons: Coupon[];
 }
 
-export type ICouponCreateRes = Coupon;
+export interface ICouponCreateRes extends Coupon {}
+
+export interface ICouponUpdateRes extends Coupon {}

@@ -3,7 +3,7 @@ import { CouponService } from './coupon.service';
 import { mock, MockProxy, mockReset } from 'jest-mock-extended';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
-import { CouponCreateIn } from '../domain/coupon/coupon.in';
+import { CouponCreateIn, CouponUpdateIn } from '../domain/coupon/coupon.in';
 
 describe('Coupon Service test  ', () => {
   const couponRepository: MockProxy<ICouponRepository> = mock<ICouponRepository>();
@@ -201,6 +201,153 @@ describe('Coupon Service test  ', () => {
 
         expect(couponRepository.createWithQuantity.mock.calls.length).toEqual(0);
         expect(couponRepository.createWithoutQuantity.mock.calls.length).toEqual(0);
+      });
+    });
+  });
+
+  describe('쿠폰 업데이트 테스트', () => {
+    describe('성공 케이스', () => {
+      test('수량이 있는 경우', async () => {
+        const givenCouponUpdateIn: CouponUpdateIn = {
+          couponId: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+        };
+
+        const givenBeforeCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        couponRepository.findOneById.calledWith(givenCouponUpdateIn.couponId).mockResolvedValue(givenBeforeCoupon);
+
+        const result = await sut.update(givenCouponUpdateIn);
+
+        expect(couponRepository.updateWithQuantity.mock.calls.length).toEqual(1);
+        expect(couponRepository.updateWithoutQuantity.mock.calls.length).toEqual(0);
+      });
+
+      test('수량이 없는 경우', async () => {
+        const givenCouponUpdateIn: CouponUpdateIn = {
+          couponId: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+        };
+        const givenBeforeCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        couponRepository.findOneById.calledWith(givenCouponUpdateIn.couponId).mockResolvedValue(givenBeforeCoupon);
+
+        const result = await sut.update(givenCouponUpdateIn);
+
+        expect(couponRepository.updateWithQuantity.mock.calls.length).toEqual(0);
+        expect(couponRepository.updateWithoutQuantity.mock.calls.length).toEqual(1);
+      });
+    });
+
+    describe('실패 케이스', () => {
+      test('쿠폰이 존재하지 않는 경우', async () => {
+        const givenCouponUpdateIn: CouponUpdateIn = {
+          couponId: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+        };
+        const givenBeforeCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        couponRepository.findOneById.calledWith(givenCouponUpdateIn.couponId).mockResolvedValue(null);
+
+        await expect(async () => await sut.update(givenCouponUpdateIn)).rejects.toThrow(new Error('존재하지 않는 쿠폰 ID 입니다.'));
+
+        expect(couponRepository.updateWithQuantity.mock.calls.length).toEqual(0);
+        expect(couponRepository.updateWithoutQuantity.mock.calls.length).toEqual(0);
+      });
+
+      test('다른 type을 변경하고자 한 경우', async () => {
+        const givenCouponUpdateIn: CouponUpdateIn = {
+          couponId: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+        };
+        const givenBeforeCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        couponRepository.findOneById.calledWith(givenCouponUpdateIn.couponId).mockResolvedValue(givenBeforeCoupon);
+
+        await expect(async () => await sut.update(givenCouponUpdateIn)).rejects.toThrow(new Error('type 은 변경할 수 없습니다.'));
+
+        expect(couponRepository.updateWithQuantity.mock.calls.length).toEqual(0);
+        expect(couponRepository.updateWithoutQuantity.mock.calls.length).toEqual(0);
       });
     });
   });

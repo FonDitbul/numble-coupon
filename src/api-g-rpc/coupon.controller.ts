@@ -1,10 +1,10 @@
 import { Body, Controller, Inject } from '@nestjs/common';
 import { CouponService } from '../application/coupon.service';
 import { GrpcMethod } from '@nestjs/microservices';
-import { ICouponCreateRes, IFindAllRes } from './coupon.res.dto';
+import { ICouponCreateRes, ICouponUpdateRes, IFindAllRes } from './coupon.res.dto';
 import { Coupon } from '../domain/coupon/coupon';
 import { ICouponService } from '../domain/coupon/coupon.service';
-import { ICouponCreateReq } from './coupon.req.dto';
+import { ICouponCreateReq, ICouponUpdateReq } from './coupon.req.dto';
 
 @Controller('coupon')
 export class CouponController {
@@ -20,5 +20,10 @@ export class CouponController {
   @GrpcMethod('CouponService', 'Create')
   async create(@Body() createReq: ICouponCreateReq): Promise<ICouponCreateRes> {
     return await this.couponService.create(createReq);
+  }
+
+  @GrpcMethod('CouponService', 'Update')
+  async update(@Body() updateReq: ICouponUpdateReq): Promise<ICouponUpdateRes> {
+    return await this.couponService.update(updateReq);
   }
 }

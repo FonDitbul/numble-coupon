@@ -10,3 +10,7 @@ export interface ICouponCreateReq {
   discountType: number;
   discountAmount: number;
 }
+
+export interface ICouponUpdateReq extends ICouponCreateReq {
+  couponId: number;
+}

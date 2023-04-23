@@ -12,3 +12,7 @@ export interface CouponCreateIn {
   discountType: number;
   discountAmount: number;
 }
+
+export interface CouponUpdateIn extends CouponCreateIn {
+  couponId: number;
+}

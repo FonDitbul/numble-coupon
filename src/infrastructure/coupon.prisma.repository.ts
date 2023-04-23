@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import { Coupon } from '../domain/coupon/coupon';
-import { CouponCreateOut } from '../domain/coupon/coupon.out';
+import { CouponCreateOut, CouponUpdateOut } from '../domain/coupon/coupon.out';
 
 @Injectable()
 export class CouponPrismaRepository implements ICouponRepository {
   constructor(private prisma: PrismaService) {}
 
+  async findOneById(id: number): Promise<Coupon> {
+    return await this.prisma.coupons.findFirst({ where: { id: id, deletedAt: null } });
+  }
   async findAll(): Promise<Coupon[]> {
     // const whereCondition = removeUndefinedKey({
     //   id: where.id,
@@ -72,7 +75,84 @@ export class CouponPrismaRepository implements ICouponRepository {
     return Promise.resolve(undefined);
   }
 
-  update(): Promise<Coupon> {
-    return Promise.resolve(undefined);
+  async updateWithoutQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
+    return await this.prisma.$transaction(async (tx) => {
+      const updatedCoupon = await this.prisma.coupons.update({
+        where: {
+          id: couponUpdateOut.couponId,
+        },
+        data: {
+          name: couponUpdateOut.name,
+          startDate: couponUpdateOut.startDate,
+          endDate: couponUpdateOut.endDate,
+          expireMinute: couponUpdateOut.expireMinute,
+          discountType: couponUpdateOut.discountType,
+          discountAmount: couponUpdateOut.discountAmount,
+        },
+      });
+
+      await this.prisma.couponsHistory.create({
+        data: {
+          ...couponUpdateOut,
+          description: '쿠폰 업데이트',
+        },
+      });
+
+      return updatedCoupon;
+    });
+  }
+
+  async updateWithQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
+    return await this.prisma.$transaction(async (tx) => {
+      const beforeCouponStock = await this.prisma.couponsStock.findFirstOrThrow({
+        select: { id: true, count: true },
+        where: {
+          couponId: couponUpdateOut.couponId,
+        },
+      });
+
+      const sumCount = beforeCouponStock.count + couponUpdateOut.count;
+
+      const updatedCoupon = await this.prisma.coupons.update({
+        where: {
+          id: couponUpdateOut.couponId,
+        },
+        data: {
+          name: couponUpdateOut.name,
+          count: sumCount,
+          startDate: couponUpdateOut.startDate,
+          endDate: couponUpdateOut.endDate,
+          expireMinute: couponUpdateOut.expireMinute,
+          discountType: couponUpdateOut.discountType,
+          discountAmount: couponUpdateOut.discountAmount,
+        },
+      });
+
+      await this.prisma.couponsStock.update({
+        where: {
+          id: beforeCouponStock.id,
+        },
+        data: {
+          count: sumCount,
+        },
+      });
+
+      await this.prisma.couponsHistory.create({
+        data: {
+          couponId: couponUpdateOut.couponId,
+          name: couponUpdateOut.name,
+          type: couponUpdateOut.type,
+          count: sumCount,
+          startDate: couponUpdateOut.startDate,
+          endDate: couponUpdateOut.endDate,
+          expireMinute: couponUpdateOut.expireMinute,
+          discountType: couponUpdateOut.discountType,
+          discountAmount: couponUpdateOut.discountAmount,
+          description: '쿠폰 업데이트',
+        },
+      });
+
+      return updatedCoupon;
+    });
   }
 }

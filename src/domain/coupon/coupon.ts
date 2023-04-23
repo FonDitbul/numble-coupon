@@ -15,6 +15,10 @@ export class Coupon {
   updatedAt: Date;
   deletedAt: Date | null;
 
+  static isExistCoupon(coupon: Coupon) {
+    return !coupon;
+  }
+
   static isValidDiscountType(discountType: number, discountAmount: number) {
     if (![COUPON_PREDEFINE.DISCOUNT_TYPE_RATE, COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT].includes(discountType)) {
       return false;

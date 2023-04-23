@@ -36,3 +36,45 @@ export class CouponCreateOut {
     this.discountAmount = discountAmount;
   }
 }
+
+export class CouponUpdateOut {
+  readonly couponId: number;
+
+  readonly name: string;
+  readonly type: number;
+  readonly count: number;
+
+  readonly startDate: Date;
+  readonly endDate: Date;
+  readonly expireMinute: number;
+
+  readonly discountType: number;
+  readonly discountAmount: number;
+
+  constructor(
+    name: string,
+    type: number,
+    count: number,
+
+    startDate: Date,
+    endDate: Date,
+    expireMinute: number,
+
+    discountType: number,
+    discountAmount: number,
+    couponId: number,
+  ) {
+    this.name = name;
+    this.type = type;
+    this.count = count;
+
+    this.startDate = new Date(startDate);
+    this.endDate = new Date(endDate);
+    this.expireMinute = expireMinute;
+
+    this.discountType = discountType;
+    this.discountAmount = discountAmount;
+
+    this.couponId = couponId;
+  }
+}
