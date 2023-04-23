@@ -19,8 +19,6 @@ export class CouponController {
 
   @GrpcMethod('CouponService', 'Create')
   async create(@Body() createReq: ICouponCreateReq): Promise<ICouponCreateRes> {
-    const temp: Coupon = await this.couponService.create(createReq);
-
-    return temp;
+    return await this.couponService.create(createReq);
   }
 }
