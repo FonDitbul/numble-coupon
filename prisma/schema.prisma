@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Coupons {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  type Int
+  count Int
+
+  startDate DateTime @map("start_date")
+  endDate DateTime @map("end_date")
+  expireMinute Int @map("expire_minute")
+
+  discountType Int @map("discount_type")
+  discountAmount Int @map("discount_amount")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("coupons")
+}
+
+model CouponsStock {
+  id Int @id @default(autoincrement())
+  couponId Int 
+  count Int
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("coupons_stock")
+}
+
+model CouponsHistory {
+  id Int @id @default(autoincrement())
+  couponId Int @map("coupon_id")
+  name String @db.VarChar(100)
+  type Int
+  count Int
+
+  startDate DateTime @map("start_date")
+  endDate DateTime @map("end_date")
+  expireMinute Int @map("expire_minute")
+
+  discountType Int @map("discount_type")
+  discountAmount Int @map("discount_amount")
+
+  description String? 
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("coupons_history")
+}
+
+model UserCouponsStorage {
+  id Int @id @default(autoincrement())
+  userId String @map("user_id")
+  couponId Int @map("coupon_id")
+
+  couponNumber Int @map("coupon_number")
+  productId String @map("product_id")
+
+  giveDate DateTime? @map("give_date")
+  usedDate DateTime? @map("used_date")
+  expireDate DateTime @map("expire_date")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("user_coupons_storage")
+}
+
+model UserCouponsStorageHistory {
+  id Int @id @default(autoincrement())
+  userCouponId Int @map("user_coupon_id")
+
+  usedDate DateTime? @map("used_date")
+  description String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("user_coupons_storage_history")
+}
