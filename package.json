@@ -28,6 +28,7 @@
     "@nestjs/microservices": "^9.4.0",
     "@nestjs/platform-express": "^9.4.0",
     "@prisma/client": "^4.13.0",
+    "date-fns": "^2.29.3",
     "jest-mock-extended": "^3.0.4",
     "prisma": "^4.13.0",
     "reflect-metadata": "^0.1.13",

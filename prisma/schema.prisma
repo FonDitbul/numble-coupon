@@ -72,9 +72,9 @@ model UserCouponsStorage {
   couponId Int @map("coupon_id")
 
   couponNumber Int @map("coupon_number")
-  productId String @map("product_id")
+  productId String? @map("product_id")
 
-  giveDate DateTime? @map("give_date")
+  giveDate DateTime @map("give_date")
   usedDate DateTime? @map("used_date")
   expireDate DateTime @map("expire_date")
 
@@ -94,8 +94,9 @@ model UserCouponsStorageHistory {
   id Int @id @default(autoincrement())
   userCouponId Int @map("user_coupon_id")
 
+	productId String? @map("product_id")
   usedDate DateTime? @map("used_date")
-  description String
+  description String?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at") @updatedAt

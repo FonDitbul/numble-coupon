@@ -22,9 +22,10 @@ message FindAllQuery {
 }
 
 message UseUserCoupon {
-  string userId = 1;
-  int32 couponId = 2;
-  string productId = 3;
+  int32 id = 1;
+  string userId = 2;
+  int32 couponId = 3;
+  string productId = 4;
 }
 
 message CancelUserCoupon {

@@ -7,9 +7,9 @@ export class UserCoupon {
   readonly couponNumber: number;
   readonly productId: string | null;
 
-  readonly giveDate: Date | null;
+  readonly giveDate: Date;
   readonly usedDate: Date | null;
-  readonly expireDate: Date | null;
+  readonly expireDate: Date;
 
   readonly discountType: number;
   readonly discountAmount: number;
@@ -27,9 +27,9 @@ export class UserCoupon {
     couponNumber: number,
     productId: string | null,
 
-    giveDate: Date | null,
+    giveDate: Date,
     usedDate: Date | null,
-    expireDate: Date | null,
+    expireDate: Date,
 
     discountType: number,
     discountAmount: number,
@@ -58,5 +58,17 @@ export class UserCoupon {
     this.deletedAt = deletedAt;
 
     this.Coupons = Coupons;
+  }
+
+  static isExistUserCoupon(userCoupon: UserCoupon) {
+    return !userCoupon;
+  }
+
+  static isExpire(expireDate: Date) {
+    return expireDate < new Date();
+  }
+
+  static isAlreadyUsed(productId: string | null, usedDate: Date | null) {
+    return productId || usedDate;
   }
 }
