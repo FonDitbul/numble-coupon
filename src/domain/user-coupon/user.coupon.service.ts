@@ -1,5 +1,6 @@
 import { UserCoupon } from './user.coupon';
+import { IUserCouponFindAllIn } from './user.coupon.in';
 
-export class IUserCouponService {
-  findAll: () => Promise<UserCoupon[]>;
+export interface IUserCouponService {
+  findAll: (findAllIn: IUserCouponFindAllIn) => Promise<UserCoupon[]>;
 }

@@ -11,14 +11,14 @@ service UserCouponService {
 }
 
 message GiveCoupon {
-    string userId = 1;
-    int32 couponId = 2;
+  string userId = 1;
+  int32 couponId = 2;
 }
 
 message FindAllQuery {
   string userId = 1;
-  int32 limit = 2;
-  int32 skip = 3;
+  int32 take = 2;
+  optional int32 couponIdCursor = 3;
 }
 
 message UseUserCoupon {
@@ -75,5 +75,5 @@ message UserCouponStorage {
   string updatedAt = 10;
   string deletedAt = 11;
 
-  optional Coupon coupon = 12;
+  optional Coupon Coupons = 12;
 }
