@@ -50,10 +50,6 @@ export class CouponService implements ICouponService {
     return await this.couponRepository.createWithQuantity(couponCreateOut);
   }
 
-  async delete(): Promise<Coupon> {
-    return Promise.resolve(undefined);
-  }
-
   async update(couponUpdateIn: CouponUpdateIn): Promise<Coupon> {
     const couponId = couponUpdateIn.couponId;
     const discountType = couponUpdateIn.discountType;
@@ -104,5 +100,15 @@ export class CouponService implements ICouponService {
     }
 
     return await this.couponRepository.updateWithQuantity(couponUpdateOut);
+  }
+
+  async delete(couponId: number): Promise<Coupon> {
+    const deletedCoupon = await this.couponRepository.findOneById(couponId);
+
+    if (Coupon.isExistCoupon(deletedCoupon)) {
+      throw new Error('존재하지 않거나 이미 삭제된 쿠폰 ID 입니다.');
+    }
+
+    return await this.couponRepository.delete(couponId);
   }
 }

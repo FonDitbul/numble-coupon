@@ -14,3 +14,7 @@ export interface ICouponCreateReq {
 export interface ICouponUpdateReq extends ICouponCreateReq {
   couponId: number;
 }
+
+export interface ICouponDeleteReq {
+  couponId: number;
+}

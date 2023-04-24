@@ -6,7 +6,7 @@ service CouponService {
   rpc FindAll (FindAllQuery) returns (stream Coupons) {}
   rpc Create (CreateCoupon) returns (Coupon) {}
   rpc Update (UpdateCoupon) returns (Coupon) {}
-//  rpc Delete () returns (Coupon) {}
+  rpc Delete (DeleteById) returns (Coupon) {}
 }
 
 message FindAllQuery {}
@@ -58,4 +58,8 @@ message UpdateCoupon {
 
   int32 discountType = 8;
   int32 discountAmount = 9;
+}
+
+message DeleteById {
+  int32 couponId = 1;
 }

@@ -5,5 +5,5 @@ export interface ICouponService {
   findAll: () => Promise<Coupon[]>;
   create: (couponCreateIn: CouponCreateIn) => Promise<Coupon>;
   update: (couponUpdateIn: CouponUpdateIn) => Promise<Coupon>;
-  delete: () => Promise<Coupon>;
+  delete: (couponId: number) => Promise<Coupon>;
 }

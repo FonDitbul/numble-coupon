@@ -71,10 +71,6 @@ export class CouponPrismaRepository implements ICouponRepository {
     });
   }
 
-  delete(): Promise<Coupon> {
-    return Promise.resolve(undefined);
-  }
-
   async updateWithoutQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
     return await this.prisma.$transaction(async (tx) => {
       const updatedCoupon = await this.prisma.coupons.update({
@@ -153,6 +149,35 @@ export class CouponPrismaRepository implements ICouponRepository {
       });
 
       return updatedCoupon;
+    });
+  }
+
+  async delete(couponId: number): Promise<Coupon> {
+    return await this.prisma.$transaction(async (tx) => {
+      const deletedCoupon = await this.prisma.coupons.update({
+        where: {
+          id: couponId,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      await this.prisma.couponsHistory.create({
+        data: {
+          couponId: deletedCoupon.id,
+          name: deletedCoupon.name,
+          type: deletedCoupon.type,
+          count: deletedCoupon.count,
+          startDate: deletedCoupon.startDate,
+          endDate: deletedCoupon.endDate,
+          expireMinute: deletedCoupon.expireMinute,
+          discountType: deletedCoupon.discountType,
+          discountAmount: deletedCoupon.discountAmount,
+          description: '쿠폰 삭제',
+        },
+      });
+      return deletedCoupon;
     });
   }
 }

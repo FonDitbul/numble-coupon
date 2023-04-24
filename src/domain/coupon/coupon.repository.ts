@@ -8,5 +8,5 @@ export class ICouponRepository {
   createWithoutQuantity: (couponCreateOut: CouponCreateOut) => Promise<Coupon>;
   updateWithQuantity: (couponUpdateOut: CouponUpdateOut) => Promise<Coupon>;
   updateWithoutQuantity: (couponUpdateOut: CouponUpdateOut) => Promise<Coupon>;
-  delete: () => Promise<Coupon>;
+  delete: (couponId: number) => Promise<Coupon>;
 }

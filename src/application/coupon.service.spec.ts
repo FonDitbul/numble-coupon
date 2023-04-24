@@ -351,4 +351,62 @@ describe('Coupon Service test  ', () => {
       });
     });
   });
+
+  describe('쿠폰 삭제 테스트', () => {
+    describe('성공 케이스', () => {
+      test('존재한 쿠폰 삭제', async () => {
+        const givenCouponId = 1;
+
+        const givenWillDeletedCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        const deletedCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: new Date(),
+        };
+
+        couponRepository.findOneById.calledWith(givenCouponId).mockResolvedValue(givenWillDeletedCoupon);
+        couponRepository.delete.calledWith(givenCouponId).mockResolvedValue(deletedCoupon);
+
+        const result = await sut.delete(givenCouponId);
+
+        expect(couponRepository.delete.mock.calls.length).toEqual(1);
+        expect(result.deletedAt).not.toBeNull();
+      });
+    });
+
+    describe('실패 케이스', () => {
+      test('존재하지 않거나 이미 삭제된 쿠폰', async () => {
+        const givenCouponId = 1;
+
+        couponRepository.findOneById.calledWith(givenCouponId).mockResolvedValue(null);
+
+        await expect(async () => await sut.delete(givenCouponId)).rejects.toThrow(new Error('존재하지 않거나 이미 삭제된 쿠폰 ID 입니다.'));
+
+        expect(couponRepository.delete.mock.calls.length).toEqual(0);
+      });
+    });
+  });
 });

@@ -7,3 +7,5 @@ export interface IFindAllRes {
 export interface ICouponCreateRes extends Coupon {}
 
 export interface ICouponUpdateRes extends Coupon {}
+
+export interface ICouponDeleteRes extends Coupon {}
