@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
-import { ICouponRepository } from '../domain/coupon/coupon.repository';
-import { Coupon } from '../domain/coupon/coupon';
-import { CouponCreateOut, CouponUpdateOut } from '../domain/coupon/coupon.out';
+import { PrismaService } from '../prisma/prisma.service';
+import { ICouponRepository } from '../../domain/coupon/coupon.repository';
+import { Coupon } from '../../domain/coupon/coupon';
+import { CouponCreateOut, CouponUpdateOut } from '../../domain/coupon/coupon.out';
 
 @Injectable()
 export class CouponPrismaRepository implements ICouponRepository {

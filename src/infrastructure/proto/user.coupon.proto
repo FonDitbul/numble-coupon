@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package user_coupon;
+
+service UserCouponService {
+  rpc Give (GiveCoupon) returns (UserCouponStorage) {}
+  rpc FindAll (FindAllQuery) returns (stream userCouponStorages) {}
+  rpc Use (UseUserCoupon) returns (UserCouponStorage) {}
+  rpc Cancel (CancelUserCoupon) returns (UserCouponStorage) {}
+  rpc Delete (DeleteUserCoupon) returns (UserCouponStorage) {}
+}
+
+message GiveCoupon {
+    string userId = 1;
+    int32 couponId = 2;
+}
+
+message FindAllQuery {
+  string userId = 1;
+  int32 limit = 2;
+  int32 skip = 3;
+}
+
+message UseUserCoupon {
+  string userId = 1;
+  int32 couponId = 2;
+  string productId = 3;
+}
+
+message CancelUserCoupon {
+  string userId = 1;
+  int32 couponId = 2;
+  string productId = 3;
+}
+
+message DeleteUserCoupon {
+  string userId = 1;
+  int32 couponId = 2;
+}
+
+message userCouponStorages {
+  repeated UserCouponStorage userCouponStorages = 1;
+}
+
+message Coupon {
+  int32 id = 1;
+  string name = 2;
+  int32 type = 3;
+  int32 count = 4;
+
+  string startDate = 5;
+  string endDate = 6;
+  int32 expireMinute = 7;
+
+  int32 discountType = 8;
+  int32 discountAmount = 9;
+
+  string createdAt = 10;
+  string updatedAt = 11;
+  string deletedAt = 12;
+}
+
+message UserCouponStorage {
+  int32 id = 1;
+  string userId = 2;
+  int32 couponId = 3;
+  int32 couponNumber = 4;
+  string productId = 5;
+
+  string giveDate = 6;
+  string usedDate = 7;
+  string expireDate = 8;
+
+  string createdAt = 9;
+  string updatedAt = 10;
+  string deletedAt = 11;
+
+  optional Coupon coupon = 12;
+}

@@ -27,6 +27,7 @@ model Coupons {
   updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
   deletedAt DateTime? @map("deleted_at")
 
+	UserCouponsStorage UserCouponsStorage[]
   @@map("coupons")
 }
 
@@ -77,9 +78,14 @@ model UserCouponsStorage {
   usedDate DateTime? @map("used_date")
   expireDate DateTime @map("expire_date")
 
+  discountType Int @map("discount_type")
+  discountAmount Int @map("discount_amount")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
   deletedAt DateTime? @map("deleted_at")
+
+	Coupons Coupons @relation(fields: [couponId], references: [id])
 
   @@map("user_coupons_storage")
 }

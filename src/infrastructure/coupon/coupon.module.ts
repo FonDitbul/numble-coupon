@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { CouponController } from '../api-g-rpc/coupon.controller';
-import { CouponService } from '../application/coupon.service';
+import { CouponController } from '../../api-g-rpc/coupon.controller';
+import { CouponService } from '../../application/coupon.service';
 import { CouponPrismaRepository } from './coupon.prisma.repository';
-import { PrismaService } from './prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as path from 'path';
 
 @Module({
@@ -13,8 +13,8 @@ import * as path from 'path';
         name: 'COUPON_PACKAGE',
         transport: Transport.GRPC,
         options: {
-          package: 'coupon', // ['hero', 'hero2']
-          protoPath: path.join(__dirname, './proto/coupon.proto'),
+          package: 'coupon',
+          protoPath: path.join(__dirname, '../proto/coupon.proto'),
         },
       },
     ]),

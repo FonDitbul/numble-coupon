@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from '../api-g-rpc/app.controller';
 import { AppService } from '../application/app.service';
 import { LoggingInterceptor } from './common/logging.interceptor';
-import { CouponModule } from './coupon.module';
+import { CouponModule } from './coupon/coupon.module';
 
 @Module({
   imports: [CouponModule],
