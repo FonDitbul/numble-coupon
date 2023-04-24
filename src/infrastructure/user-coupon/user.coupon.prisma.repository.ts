@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { IUserCouponRepository } from '../../domain/user-coupon/user.coupon.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserCoupon } from '../../domain/user-coupon/user.coupon';
-import { IUserCouponFindAllOut, IUserCouponUseOut } from '../../domain/user-coupon/user.coupon.out';
+import { IUserCouponFindAllOut, IUserCouponUseCancelOut, IUserCouponUseOut } from '../../domain/user-coupon/user.coupon.out';
 
 @Injectable()
 export class UserCouponPrismaRepository implements IUserCouponRepository {
@@ -48,6 +48,31 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
       });
 
       return usedUserCoupon;
+    });
+  }
+
+  async useCancel(useCancelOut: IUserCouponUseCancelOut): Promise<UserCoupon> {
+    return await this.prisma.$transaction(async (tx) => {
+      const useCancelUserCoupon = await this.prisma.userCouponsStorage.update({
+        where: {
+          id: useCancelOut.id,
+        },
+        data: {
+          productId: null,
+          usedDate: null,
+        },
+      });
+
+      await this.prisma.userCouponsStorageHistory.create({
+        data: {
+          userCouponId: useCancelOut.id,
+          productId: null,
+          usedDate: null,
+          description: '쿠폰 사용 취소',
+        },
+      });
+
+      return useCancelUserCoupon;
     });
   }
 }

@@ -6,7 +6,7 @@ import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import * as dateFns from 'date-fns';
 import { IUserCouponFindAllOut } from '../domain/user-coupon/user.coupon.out';
-import { IUserCouponFindAllIn } from '../domain/user-coupon/user.coupon.in';
+import { IUserCouponFindAllIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
 
 describe('User Coupon Service Test  ', () => {
   const userCouponRepository: MockProxy<IUserCouponRepository> = mock<IUserCouponRepository>();
@@ -105,22 +105,7 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
           productId: 'test물품',
         };
-        const givenUserCoupon = new UserCoupon(
-          1,
-          'testUser',
-          1,
-          1,
-          null,
-          new Date(),
-          null,
-          dateFns.addDays(new Date(), 7),
-          1,
-          50,
-          new Date(),
-          new Date(),
-          null,
-          undefined,
-        );
+
         userCouponRepository.findOneById.calledWith(givenUserCouponUseIn.id).mockResolvedValue(null);
 
         await expect(async () => await sut.use(givenUserCouponUseIn)).rejects.toThrow(new Error('존재하지 않거나 삭제된 유저 쿠폰입니다.'));
@@ -246,6 +231,178 @@ describe('User Coupon Service Test  ', () => {
         await expect(async () => await sut.use(givenUserCouponUseIn)).rejects.toThrow(new Error('coupon Id가 동일하지 않습니다.'));
 
         expect(userCouponRepository.use.mock.calls.length).toEqual(0);
+      });
+    });
+  });
+
+  describe('유저의 쿠폰 사용 취소 테스트', () => {
+    describe('성공 케이스', () => {
+      test('유저 쿠폰 사용 취소 성공', async () => {
+        const givenUserCouponUseCancelIn: IUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          1,
+          1,
+          'already product id',
+          new Date(),
+          new Date(),
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(givenUserCoupon);
+
+        const result = await sut.useCancel(givenUserCouponUseCancelIn);
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(1);
+      });
+    });
+
+    describe('실패 케이스', () => {
+      test('존재하지 않는 쿠폰 id일 경우', async () => {
+        const givenUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(null);
+
+        await expect(async () => await sut.useCancel(givenUserCouponUseCancelIn)).rejects.toThrow(
+          new Error('존재하지 않거나 삭제된 유저 쿠폰입니다.'),
+        );
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
+      });
+
+      test('해당 쿠폰이 만료되었을 경우', async () => {
+        const givenUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          1,
+          1,
+          'productId',
+          new Date(),
+          new Date(),
+          dateFns.subDays(new Date(), 7), // 만료 날짜
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.useCancel(givenUserCouponUseCancelIn)).rejects.toThrow(
+          new Error('만료 된 쿠폰은 변경할 수 없습니다.'),
+        );
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
+      });
+
+      test('사용되지 않은 쿠폰일 경우', async () => {
+        const givenUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          1,
+          1,
+          null,
+          new Date(),
+          null,
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.useCancel(givenUserCouponUseCancelIn)).rejects.toThrow(new Error('사용되지 않은 쿠폰입니다.'));
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
+      });
+
+      test('요청받은 유저 쿠폰 id 중, user id가 동일하지 않은 경우', async () => {
+        const givenUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUserOther',
+          2,
+          1,
+          'product Id',
+          new Date(),
+          new Date(),
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.useCancel(givenUserCouponUseCancelIn)).rejects.toThrow(new Error('다른 user 의 쿠폰입니다.'));
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
+      });
+
+      test('요청받은 유저 쿠폰 coupon id 중, coupon id가 동일하지 않은 경우', async () => {
+        const givenUserCouponUseCancelIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+          productId: 'test물품',
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          2,
+          1,
+          'productId',
+          new Date(),
+          new Date(),
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponUseCancelIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.useCancel(givenUserCouponUseCancelIn)).rejects.toThrow(
+          new Error('coupon Id가 동일하지 않습니다.'),
+        );
+
+        expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
       });
     });
   });

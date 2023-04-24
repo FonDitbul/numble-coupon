@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IUserCouponService } from '../domain/user-coupon/user.coupon.service';
 import { IUserCouponRepository } from '../domain/user-coupon/user.coupon.repository';
-import { IUserCouponFindAllIn, IUserCouponUseIn } from '../domain/user-coupon/user.coupon.in';
+import { IUserCouponFindAllIn, IUserCouponUseCancelIn, IUserCouponUseIn } from '../domain/user-coupon/user.coupon.in';
 import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { find } from 'rxjs';
-import { IUserCouponFindAllOut } from '../domain/user-coupon/user.coupon.out';
+import { IUserCouponFindAllOut, IUserCouponUseCancelOut, IUserCouponUseOut } from '../domain/user-coupon/user.coupon.out';
 
 @Injectable()
 export class UserCouponService implements IUserCouponService {
@@ -69,5 +69,34 @@ export class UserCouponService implements IUserCouponService {
     };
 
     return await this.userCouponRepository.use(userCouponOut);
+  }
+  async useCancel(useCancelIn: IUserCouponUseCancelIn): Promise<UserCoupon> {
+    const userCoupon = await this.userCouponRepository.findOneById(useCancelIn.id);
+
+    if (UserCoupon.isExistUserCoupon(userCoupon)) {
+      throw new Error('존재하지 않거나 삭제된 유저 쿠폰입니다.');
+    }
+
+    if (UserCoupon.isExpire(userCoupon.expireDate)) {
+      throw new Error('만료 된 쿠폰은 변경할 수 없습니다.');
+    }
+
+    if (UserCoupon.isNotUsed(userCoupon.productId, userCoupon.usedDate)) {
+      throw new Error('사용되지 않은 쿠폰입니다.');
+    }
+
+    if (useCancelIn.userId !== userCoupon.userId) {
+      throw new Error('다른 user 의 쿠폰입니다.');
+    }
+
+    if (useCancelIn.couponId !== userCoupon.couponId) {
+      throw new Error('coupon Id가 동일하지 않습니다.');
+    }
+
+    const useCancelOut: IUserCouponUseCancelOut = {
+      id: useCancelIn.id,
+    };
+
+    return await this.userCouponRepository.useCancel(useCancelOut);
   }
 }

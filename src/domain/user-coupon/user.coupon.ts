@@ -68,7 +68,11 @@ export class UserCoupon {
     return expireDate < new Date();
   }
 
-  static isAlreadyUsed(productId: string | null, usedDate: Date | null) {
-    return productId || usedDate;
+  static isAlreadyUsed(productId: string | null, usedDate: Date | null): boolean {
+    return !!productId || !!usedDate;
+  }
+
+  static isNotUsed(productId: string | null, usedDate: Date | null): boolean {
+    return !productId || !usedDate;
   }
 }

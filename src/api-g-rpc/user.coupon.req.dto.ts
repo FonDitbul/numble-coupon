@@ -5,8 +5,14 @@ export interface IUserCouponFindAllReq {
 }
 
 export interface IUserCouponUseReq {
-  id: number
+  id: number;
   userId: string;
   couponId: number;
   productId: string;
+}
+
+export interface IUserCouponUseCancelReq {
+  id: number;
+  userId: string;
+  couponId: number;
 }

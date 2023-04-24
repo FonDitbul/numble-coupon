@@ -5,3 +5,5 @@ export interface IUserCouponFindAllRes {
 }
 
 export interface IUserCouponUseRes extends UserCoupon {}
+
+export interface IUserCouponUseCancelRes extends UserCoupon {}

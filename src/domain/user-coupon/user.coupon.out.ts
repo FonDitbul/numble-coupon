@@ -9,3 +9,7 @@ export interface IUserCouponUseOut {
   productId: string;
   usedDate: Date;
 }
+
+export interface IUserCouponUseCancelOut {
+  id: number;
+}

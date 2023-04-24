@@ -10,3 +10,9 @@ export interface IUserCouponUseIn {
   couponId: number;
   productId: string;
 }
+
+export interface IUserCouponUseCancelIn {
+  id: number;
+  userId: string;
+  couponId: number;
+}

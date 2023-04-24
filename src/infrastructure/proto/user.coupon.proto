@@ -6,7 +6,7 @@ service UserCouponService {
   rpc Give (GiveCoupon) returns (UserCouponStorage) {}
   rpc FindAll (FindAllQuery) returns (stream userCouponStorages) {}
   rpc Use (UseUserCoupon) returns (UserCouponStorage) {}
-  rpc Cancel (CancelUserCoupon) returns (UserCouponStorage) {}
+  rpc UseCancel (UseCancelUserCoupon) returns (UserCouponStorage) {}
   rpc Delete (DeleteUserCoupon) returns (UserCouponStorage) {}
 }
 
@@ -28,10 +28,10 @@ message UseUserCoupon {
   string productId = 4;
 }
 
-message CancelUserCoupon {
-  string userId = 1;
-  int32 couponId = 2;
-  string productId = 3;
+message UseCancelUserCoupon {
+  int32 id = 1;
+  string userId = 2;
+  int32 couponId = 3;
 }
 
 message DeleteUserCoupon {
