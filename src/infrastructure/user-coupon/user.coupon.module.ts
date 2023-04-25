@@ -5,6 +5,7 @@ import { UserCouponController } from '../../api-g-rpc/user.coupon.controller';
 import { UserCouponService } from '../../application/user.coupon.service';
 import { UserCouponPrismaRepository } from './user.coupon.prisma.repository';
 import * as path from 'path';
+import { CouponPrismaRepository } from '../coupon/coupon.prisma.repository';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import * as path from 'path';
   providers: [
     { provide: 'IUserCouponService', useClass: UserCouponService },
     { provide: 'IUserCouponRepository', useClass: UserCouponPrismaRepository },
+    { provide: 'ICouponRepository', useClass: CouponPrismaRepository },
     PrismaService,
   ],
 })

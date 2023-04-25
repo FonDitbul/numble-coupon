@@ -1,12 +1,29 @@
 import { Body, Controller, Inject } from '@nestjs/common';
 import { IUserCouponService } from '../domain/user-coupon/user.coupon.service';
 import { GrpcMethod } from '@nestjs/microservices';
-import { IUserCouponDeleteReq, IUserCouponFindAllReq, IUserCouponUseCancelReq, IUserCouponUseReq } from './user.coupon.req.dto';
-import { IUserCouponDeleteRes, IUserCouponFindAllRes, IUserCouponUseCancelRes, IUserCouponUseRes } from './user.coupon.res.dto';
+import {
+  IUserCouponDeleteReq,
+  IUserCouponFindAllReq,
+  IUserCouponGiveReq,
+  IUserCouponUseCancelReq,
+  IUserCouponUseReq,
+} from './user.coupon.req.dto';
+import {
+  IUserCouponDeleteRes,
+  IUserCouponFindAllRes,
+  IUserCouponGiveRes,
+  IUserCouponUseCancelRes,
+  IUserCouponUseRes,
+} from './user.coupon.res.dto';
 
 @Controller('user_coupon')
 export class UserCouponController {
   constructor(@Inject('IUserCouponService') private userCouponService: IUserCouponService) {}
+
+  @GrpcMethod('UserCouponService', 'Give')
+  async give(@Body() giveReq: IUserCouponGiveReq): Promise<IUserCouponGiveRes> {
+    return await this.userCouponService.give(giveReq);
+  }
 
   @GrpcMethod('UserCouponService', 'FindAll')
   async findAll(@Body() findAllQuery: IUserCouponFindAllReq): Promise<IUserCouponFindAllRes> {

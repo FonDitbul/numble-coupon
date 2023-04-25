@@ -1,3 +1,13 @@
+export interface IUserCouponGiveOut {
+  userId: string;
+  couponId: number;
+  couponNumber: number;
+  giveDate: Date;
+  expireDate: Date;
+  discountType: number;
+  discountAmount: number;
+}
+
 export interface IUserCouponFindAllOut {
   userId: string;
   take: number;

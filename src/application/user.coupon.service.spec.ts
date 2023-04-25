@@ -6,15 +6,180 @@ import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import * as dateFns from 'date-fns';
 import { IUserCouponFindAllOut } from '../domain/user-coupon/user.coupon.out';
-import { IUserCouponDeleteIn, IUserCouponFindAllIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
+import { IUserCouponDeleteIn, IUserCouponFindAllIn, IUserCouponGiveIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
+import { ICouponRepository } from '../domain/coupon/coupon.repository';
+import { CouponStock } from '../domain/coupon/coupon.stock';
 
 describe('User Coupon Service Test  ', () => {
   const userCouponRepository: MockProxy<IUserCouponRepository> = mock<IUserCouponRepository>();
+  const couponRepository: MockProxy<ICouponRepository> = mock<ICouponRepository>();
 
-  const sut: IUserCouponService = new UserCouponService(userCouponRepository);
+  const sut: IUserCouponService = new UserCouponService(userCouponRepository, couponRepository);
 
   beforeEach(() => {
     mockReset(userCouponRepository);
+  });
+
+  describe('유저의 쿠폰 발급 테스트', () => {
+    describe('성공 케이스', () => {
+      test('수량 제한이 없는 쿠폰 발급 성공', async () => {
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 0,
+          startDate: new Date(),
+          endDate: dateFns.addDays(new Date(), 7),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+
+        const result = await sut.give(givenGiveIn);
+
+        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(1);
+        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+      });
+
+      test('수량 제한이 있는 쿠폰 발급 성공', async () => {
+        const givenCouponStock: CouponStock = {
+          id: 1,
+          couponId: 1,
+          count: 50,
+          version: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: dateFns.addDays(new Date(), 7),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+          CouponsStock: givenCouponStock,
+        };
+
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+
+        const result = await sut.give(givenGiveIn);
+
+        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
+        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(1);
+      });
+    });
+
+    describe('실패 케이스', () => {
+      test('쿠폰이 존재하지 않는 경우', async () => {
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(null);
+
+        await expect(async () => {
+          await sut.give(givenGiveIn);
+        }).rejects.toThrow('존재하지 않는 쿠폰입니다.');
+
+        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
+        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+      });
+
+      test('쿠폰이 endDate (발급 만료 날짜) 가 지난 경우', async () => {
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: dateFns.subDays(new Date(), 7),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+
+        await expect(async () => {
+          await sut.give(givenGiveIn);
+        }).rejects.toThrow('발급이 만료된 쿠폰입니다.');
+
+        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
+        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+      });
+
+      test('수량 제한이 있는 쿠폰의 재고가 남아있지 않은 경우', async () => {
+        const givenCouponStock: CouponStock = {
+          id: 1,
+          couponId: 1,
+          count: 0,
+          version: 50,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: dateFns.addDays(new Date(), 7),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+          CouponsStock: givenCouponStock,
+        };
+
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+
+        await expect(async () => {
+          await sut.give(givenGiveIn);
+        }).rejects.toThrow('남은 재고가 존재하지 않습니다.');
+
+        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
+        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+      });
+    });
   });
 
   describe('유저의 쿠폰 불러오기 테스트', () => {

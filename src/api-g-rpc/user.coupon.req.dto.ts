@@ -1,3 +1,8 @@
+export interface IUserCouponGiveReq {
+  userId: string;
+  couponId: number;
+}
+
 export interface IUserCouponFindAllReq {
   userId: string;
   take: number;

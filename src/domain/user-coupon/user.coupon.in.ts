@@ -1,3 +1,7 @@
+export interface IUserCouponGiveIn {
+  userId: string;
+  couponId: number;
+}
 export interface IUserCouponFindAllIn {
   userId: string;
   take: number;

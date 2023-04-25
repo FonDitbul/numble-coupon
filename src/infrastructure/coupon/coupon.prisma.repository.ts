@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ICouponRepository } from '../../domain/coupon/coupon.repository';
-import { Coupon } from '../../domain/coupon/coupon';
+import { Coupon, COUPON_PREDEFINE } from '../../domain/coupon/coupon';
 import { CouponCreateOut, CouponUpdateOut } from '../../domain/coupon/coupon.out';
 
 @Injectable()
@@ -10,6 +10,15 @@ export class CouponPrismaRepository implements ICouponRepository {
 
   async findOneById(id: number): Promise<Coupon> {
     return await this.prisma.coupons.findFirst({ where: { id: id, deletedAt: null } });
+  }
+
+  async findOneWithStockById(id: number): Promise<Coupon> {
+    return await this.prisma.coupons.findFirst({
+      where: { id: id, deletedAt: null },
+      include: {
+        CouponsStock: true,
+      },
+    });
   }
   async findAll(): Promise<Coupon[]> {
     // const whereCondition = removeUndefinedKey({
@@ -25,21 +34,22 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async createWithQuantity(couponCreateOut: CouponCreateOut): Promise<Coupon> {
-    return await this.prisma.$transaction(async (tx) => {
-      const createdCoupon = await this.prisma.coupons.create({
+    return await this.prisma.$transaction(async (transaction) => {
+      const createdCoupon = await transaction.coupons.create({
         data: {
           ...couponCreateOut,
         },
       });
 
-      await this.prisma.couponsStock.create({
+      await transaction.couponsStock.create({
         data: {
           couponId: createdCoupon.id,
           count: createdCoupon.count,
+          version: 0,
         },
       });
 
-      await this.prisma.couponsHistory.create({
+      await transaction.couponsHistory.create({
         data: {
           ...couponCreateOut,
           couponId: createdCoupon.id,
@@ -52,14 +62,14 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async createWithoutQuantity(couponCreateOut: CouponCreateOut): Promise<Coupon> {
-    return await this.prisma.$transaction(async (tx) => {
-      const createdCoupon = await this.prisma.coupons.create({
+    return await this.prisma.$transaction(async (transaction) => {
+      const createdCoupon = await transaction.coupons.create({
         data: {
           ...couponCreateOut,
         },
       });
 
-      await this.prisma.couponsHistory.create({
+      await transaction.couponsHistory.create({
         data: {
           ...couponCreateOut,
           couponId: createdCoupon.id,
@@ -72,8 +82,8 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async updateWithoutQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
-    return await this.prisma.$transaction(async (tx) => {
-      const updatedCoupon = await this.prisma.coupons.update({
+    return await this.prisma.$transaction(async (transaction) => {
+      const updatedCoupon = await transaction.coupons.update({
         where: {
           id: couponUpdateOut.couponId,
         },
@@ -87,7 +97,7 @@ export class CouponPrismaRepository implements ICouponRepository {
         },
       });
 
-      await this.prisma.couponsHistory.create({
+      await transaction.couponsHistory.create({
         data: {
           ...couponUpdateOut,
           description: '쿠폰 업데이트',
@@ -99,8 +109,8 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async updateWithQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
-    return await this.prisma.$transaction(async (tx) => {
-      const beforeCouponStock = await this.prisma.couponsStock.findFirstOrThrow({
+    return await this.prisma.$transaction(async (transaction) => {
+      const beforeCouponStock = await transaction.couponsStock.findFirstOrThrow({
         select: { id: true, count: true },
         where: {
           couponId: couponUpdateOut.couponId,
@@ -109,7 +119,7 @@ export class CouponPrismaRepository implements ICouponRepository {
 
       const sumCount = beforeCouponStock.count + couponUpdateOut.count;
 
-      const updatedCoupon = await this.prisma.coupons.update({
+      const updatedCoupon = await transaction.coupons.update({
         where: {
           id: couponUpdateOut.couponId,
         },
@@ -124,7 +134,7 @@ export class CouponPrismaRepository implements ICouponRepository {
         },
       });
 
-      await this.prisma.couponsStock.update({
+      await transaction.couponsStock.update({
         where: {
           id: beforeCouponStock.id,
         },
@@ -133,7 +143,7 @@ export class CouponPrismaRepository implements ICouponRepository {
         },
       });
 
-      await this.prisma.couponsHistory.create({
+      await transaction.couponsHistory.create({
         data: {
           couponId: couponUpdateOut.couponId,
           name: couponUpdateOut.name,
@@ -153,8 +163,8 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async delete(couponId: number): Promise<Coupon> {
-    return await this.prisma.$transaction(async (tx) => {
-      const deletedCoupon = await this.prisma.coupons.update({
+    return await this.prisma.$transaction(async (transaction) => {
+      const deletedCoupon = await transaction.coupons.update({
         where: {
           id: couponId,
         },
@@ -163,7 +173,18 @@ export class CouponPrismaRepository implements ICouponRepository {
         },
       });
 
-      await this.prisma.couponsHistory.create({
+      if (deletedCoupon.type === COUPON_PREDEFINE.TYPE_WITH_QUANTITY) {
+        await transaction.couponsStock.update({
+          where: {
+            couponId: couponId,
+          },
+          data: {
+            deletedAt: new Date(),
+          },
+        });
+      }
+
+      await transaction.couponsHistory.create({
         data: {
           couponId: deletedCoupon.id,
           name: deletedCoupon.name,

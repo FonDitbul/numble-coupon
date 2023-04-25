@@ -1,3 +1,5 @@
+import { CouponStock } from './coupon.stock';
+
 export class Coupon {
   id: number;
   name: string;
@@ -14,6 +16,8 @@ export class Coupon {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+
+  CouponsStock?: CouponStock;
 
   static isExistCoupon(coupon: Coupon) {
     return !coupon;
@@ -51,6 +55,10 @@ export class Coupon {
 
   static isValidWithQuantityTypeCount(count: number) {
     return count > 0;
+  }
+
+  static isEndDateExpire(endDate: Date, now: Date) {
+    return endDate < now;
   }
 }
 

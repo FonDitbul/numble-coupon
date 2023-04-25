@@ -3,6 +3,7 @@ import { CouponCreateOut, CouponUpdateOut } from './coupon.out';
 
 export class ICouponRepository {
   findOneById: (id: number) => Promise<Coupon>;
+  findOneWithStockById: (id: number) => Promise<Coupon>;
   findAll: () => Promise<Coupon[]>;
   createWithQuantity: (couponCreateOut: CouponCreateOut) => Promise<Coupon>;
   createWithoutQuantity: (couponCreateOut: CouponCreateOut) => Promise<Coupon>;
