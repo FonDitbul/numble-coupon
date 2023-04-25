@@ -6,7 +6,7 @@ import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import * as dateFns from 'date-fns';
 import { IUserCouponFindAllOut } from '../domain/user-coupon/user.coupon.out';
-import { IUserCouponFindAllIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
+import { IUserCouponDeleteIn, IUserCouponFindAllIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
 
 describe('User Coupon Service Test  ', () => {
   const userCouponRepository: MockProxy<IUserCouponRepository> = mock<IUserCouponRepository>();
@@ -403,6 +403,115 @@ describe('User Coupon Service Test  ', () => {
         );
 
         expect(userCouponRepository.useCancel.mock.calls.length).toEqual(0);
+      });
+    });
+  });
+
+  describe('유저의 쿠폰 사용 삭제 테스트', () => {
+    describe('성공 케이스', () => {
+      test('유저 쿠폰 사용 삭제 성공', async () => {
+        const givenUserCouponDeleteIn: IUserCouponDeleteIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          1,
+          1,
+          null,
+          new Date(),
+          null,
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponDeleteIn.id).mockResolvedValue(givenUserCoupon);
+
+        const result = await sut.delete(givenUserCouponDeleteIn);
+
+        expect(userCouponRepository.delete.mock.calls.length).toEqual(1);
+      });
+    });
+
+    describe('실패 케이스', () => {
+      test('존재하지 않는 쿠폰 id일 경우', async () => {
+        const givenUserCouponDeleteIn: IUserCouponDeleteIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+
+        userCouponRepository.findOneById.calledWith(givenUserCouponDeleteIn.id).mockResolvedValue(null);
+
+        await expect(async () => await sut.delete(givenUserCouponDeleteIn)).rejects.toThrow(
+          new Error('존재하지 않거나 이미 삭제된 유저 쿠폰입니다.'),
+        );
+
+        expect(userCouponRepository.delete.mock.calls.length).toEqual(0);
+      });
+
+      test('요청받은 유저 쿠폰 id 중, user id가 동일하지 않은 경우', async () => {
+        const givenUserCouponDeleteIn: IUserCouponDeleteIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUserOther',
+          2,
+          1,
+          'product Id',
+          new Date(),
+          new Date(),
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponDeleteIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.delete(givenUserCouponDeleteIn)).rejects.toThrow(new Error('다른 user 의 쿠폰입니다.'));
+
+        expect(userCouponRepository.delete.mock.calls.length).toEqual(0);
+      });
+
+      test('요청받은 유저 쿠폰 coupon id 중, coupon id가 동일하지 않은 경우', async () => {
+        const givenUserCouponDeleteIn: IUserCouponDeleteIn = {
+          id: 1,
+          userId: 'testUser',
+          couponId: 1,
+        };
+        const givenUserCoupon = new UserCoupon(
+          1,
+          'testUser',
+          2,
+          1,
+          'productId',
+          new Date(),
+          new Date(),
+          dateFns.addDays(new Date(), 7),
+          1,
+          50,
+          new Date(),
+          new Date(),
+          null,
+          undefined,
+        );
+        userCouponRepository.findOneById.calledWith(givenUserCouponDeleteIn.id).mockResolvedValue(givenUserCoupon);
+
+        await expect(async () => await sut.delete(givenUserCouponDeleteIn)).rejects.toThrow(new Error('coupon Id가 동일하지 않습니다.'));
+
+        expect(userCouponRepository.delete.mock.calls.length).toEqual(0);
       });
     });
   });

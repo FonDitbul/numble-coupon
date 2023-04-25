@@ -16,3 +16,9 @@ export interface IUserCouponUseCancelReq {
   userId: string;
   couponId: number;
 }
+
+export interface IUserCouponDeleteReq {
+  id: number;
+  userId: string;
+  couponId: number;
+}

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IUserCouponService } from '../domain/user-coupon/user.coupon.service';
 import { IUserCouponRepository } from '../domain/user-coupon/user.coupon.repository';
-import { IUserCouponFindAllIn, IUserCouponUseCancelIn, IUserCouponUseIn } from '../domain/user-coupon/user.coupon.in';
+import { IUserCouponDeleteIn, IUserCouponFindAllIn, IUserCouponUseCancelIn, IUserCouponUseIn } from '../domain/user-coupon/user.coupon.in';
 import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { find } from 'rxjs';
 import { IUserCouponFindAllOut, IUserCouponUseCancelOut, IUserCouponUseOut } from '../domain/user-coupon/user.coupon.out';
@@ -98,5 +98,23 @@ export class UserCouponService implements IUserCouponService {
     };
 
     return await this.userCouponRepository.useCancel(useCancelOut);
+  }
+
+  async delete(deleteIn: IUserCouponDeleteIn): Promise<UserCoupon> {
+    const userCoupon = await this.userCouponRepository.findOneById(deleteIn.id);
+
+    if (UserCoupon.isExistUserCoupon(userCoupon)) {
+      throw new Error('존재하지 않거나 이미 삭제된 유저 쿠폰입니다.');
+    }
+
+    if (deleteIn.userId !== userCoupon.userId) {
+      throw new Error('다른 user 의 쿠폰입니다.');
+    }
+
+    if (deleteIn.couponId !== userCoupon.couponId) {
+      throw new Error('coupon Id가 동일하지 않습니다.');
+    }
+
+    return await this.userCouponRepository.delete({ id: deleteIn.id });
   }
 }

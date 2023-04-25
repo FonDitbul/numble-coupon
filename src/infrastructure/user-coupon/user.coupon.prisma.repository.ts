@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { IUserCouponRepository } from '../../domain/user-coupon/user.coupon.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserCoupon } from '../../domain/user-coupon/user.coupon';
-import { IUserCouponFindAllOut, IUserCouponUseCancelOut, IUserCouponUseOut } from '../../domain/user-coupon/user.coupon.out';
+import {
+  IUserCouponDeleteOut,
+  IUserCouponFindAllOut,
+  IUserCouponUseCancelOut,
+  IUserCouponUseOut,
+} from '../../domain/user-coupon/user.coupon.out';
 
 @Injectable()
 export class UserCouponPrismaRepository implements IUserCouponRepository {
@@ -73,6 +78,17 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
       });
 
       return useCancelUserCoupon;
+    });
+  }
+
+  async delete(deleteOut: IUserCouponDeleteOut): Promise<UserCoupon> {
+    return await this.prisma.userCouponsStorage.update({
+      where: {
+        id: deleteOut.id,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
     });
   }
 }

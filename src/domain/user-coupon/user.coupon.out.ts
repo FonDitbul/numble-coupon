@@ -13,3 +13,7 @@ export interface IUserCouponUseOut {
 export interface IUserCouponUseCancelOut {
   id: number;
 }
+
+export interface IUserCouponDeleteOut {
+  id: number;
+}

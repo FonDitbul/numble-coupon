@@ -35,8 +35,9 @@ message UseCancelUserCoupon {
 }
 
 message DeleteUserCoupon {
-  string userId = 1;
-  int32 couponId = 2;
+  int32 id = 1;
+  string userId = 2;
+  int32 couponId = 3;
 }
 
 message userCouponStorages {
