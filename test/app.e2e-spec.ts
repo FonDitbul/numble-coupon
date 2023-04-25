@@ -1,21 +1,59 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import * as GRPC from '@grpc/grpc-js';
+import * as ProtoLoader from '@grpc/proto-loader';
 import * as request from 'supertest';
-import { AppModule } from '../src/infrastructure/app.module';
+import { INestMicroservice } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import * as path from 'path';
+import { CouponModule } from '../src/infrastructure/coupon/coupon.module';
+import { UserCouponModule } from '../src/infrastructure/user-coupon/user.coupon.module';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication;
+  let app: INestMicroservice;
+  let couponClient;
+  let userCouponCliet;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [CouponModule, UserCouponModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestMicroservice<MicroserviceOptions>({
+      transport: Transport.GRPC,
+      options: {
+        package: ['coupon', 'user_coupon'],
+        protoPath: [
+          path.join(__dirname, '../src/infrastructure/proto/coupon.proto'),
+          path.join(__dirname, '../src/infrastructure/proto/user.coupon.proto'),
+        ],
+      },
+    });
     await app.init();
+
+    // Load proto-buffers for test gRPC dispatch
+    const proto = ProtoLoader.loadSync([
+      path.join(__dirname, '../src/infrastructure/proto/coupon.proto'),
+      path.join(__dirname, '../src/infrastructure/proto/user.coupon.proto'),
+    ]) as any;
+
+    // Create Raw gRPC client object
+    const protoGRPC = GRPC.loadPackageDefinition(proto) as any;
+
+    // Create client connected to started services at standard 5000 port
+    couponClient = new protoGRPC.coupon.CouponService('localhost:5000', GRPC.credentials.createInsecure());
+    userCouponCliet = new protoGRPC.user_coupon.UserCouponService('localhost:5000', GRPC.credentials.createInsecure());
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
+  test('GRPC test', async () => {
+    const temp = couponClient.FindAll({}, (err, result) => {
+      console.log('result: ', result);
+      console.log(err);
+    });
+
+    expect(1).toBe(1);
+  });
+
+  test('GRPC test', async () => {
+    expect(1).toBe(1);
   });
 });

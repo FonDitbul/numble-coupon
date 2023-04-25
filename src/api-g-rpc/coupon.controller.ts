@@ -12,9 +12,9 @@ export class CouponController {
 
   @GrpcMethod('CouponService', 'FindAll')
   async findAll(): Promise<IFindAllRes> {
-    const temp: Coupon[] = await this.couponService.findAll();
+    const coupons: Coupon[] = await this.couponService.findAll();
 
-    return { coupons: temp };
+    return { coupons };
   }
 
   @GrpcMethod('CouponService', 'Create')
