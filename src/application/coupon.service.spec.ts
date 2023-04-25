@@ -4,15 +4,69 @@ import { mock, MockProxy, mockReset } from 'jest-mock-extended';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import { CouponCreateIn, CouponUpdateIn } from '../domain/coupon/coupon.in';
+import { ICouponStockRepository } from '../domain/coupon/coupon.stock.repository';
+import { CouponStock } from '../domain/coupon/coupon.stock';
 
 describe('Coupon Service test  ', () => {
   const couponRepository: MockProxy<ICouponRepository> = mock<ICouponRepository>();
+  const couponStockRepository: MockProxy<ICouponStockRepository> = mock<ICouponStockRepository>();
 
-  const sut: ICouponService = new CouponService(couponRepository);
+  const sut: ICouponService = new CouponService(couponRepository, couponStockRepository);
 
   // mock clear
   beforeEach(() => {
     mockReset(couponRepository);
+  });
+
+  describe('발급 가능한 쿠폰 보기 테스트', () => {
+    describe('성공 케이스 ', () => {
+      test('수량이 존재하는 쿠폰일 경우', async () => {
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        const givenCouponStock: CouponStock = new CouponStock(1, 1, 3, 1, new Date(), new Date());
+        couponRepository.findAll.mockResolvedValue([givenCoupon]);
+        couponStockRepository.findOneByCouponId.calledWith(givenCoupon.id).mockResolvedValue(givenCouponStock);
+
+        const result = await sut.findAll();
+
+        expect(result[0].CouponsStock).toBeTruthy();
+      });
+
+      test('수량이 존재하지 않는 쿠폰일 경우', async () => {
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        const givenCouponStock: CouponStock = new CouponStock(1, 1, 3, 1, new Date(), new Date());
+        couponRepository.findAll.mockResolvedValue([givenCoupon]);
+
+        const result = await sut.findAll();
+
+        expect(result[0].CouponsStock).toBeFalsy();
+      });
+    });
   });
 
   describe('쿠폰 생성 테스트', () => {

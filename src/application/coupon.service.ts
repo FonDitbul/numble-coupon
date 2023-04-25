@@ -1,15 +1,37 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ICouponService } from '../domain/coupon/coupon.service';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
-import { Coupon } from '../domain/coupon/coupon';
+import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import { CouponCreateIn, CouponUpdateIn } from '../domain/coupon/coupon.in';
 import { CouponCreateOut, CouponUpdateOut } from '../domain/coupon/coupon.out';
+import { ICouponStockRepository } from '../domain/coupon/coupon.stock.repository';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class CouponService implements ICouponService {
-  constructor(@Inject('ICouponRepository') private couponRepository: ICouponRepository) {}
+  constructor(
+    @Inject('ICouponRepository') private couponRepository: ICouponRepository,
+    @Inject('ICouponStockRepository') private couponStockRepository: ICouponStockRepository,
+  ) {}
   async findAll(): Promise<Coupon[]> {
-    return await this.couponRepository.findAll();
+    const couponArray = await this.couponRepository.findAll();
+
+    const resultCoupon: Coupon[] = [];
+
+    for (const coupon of couponArray) {
+      if (coupon.type !== COUPON_PREDEFINE.TYPE_WITH_QUANTITY) {
+        resultCoupon.push({
+          ...coupon,
+        });
+        continue;
+      }
+      const couponStock = await this.couponStockRepository.findOneByCouponId(coupon.id);
+      resultCoupon.push({
+        ...coupon,
+        CouponsStock: couponStock,
+      });
+    }
+    return resultCoupon;
   }
 
   async create(couponCreateIn: CouponCreateIn): Promise<Coupon> {
@@ -110,5 +132,14 @@ export class CouponService implements ICouponService {
     }
 
     return await this.couponRepository.delete(couponId);
+  }
+
+  @Cron('30 * * * * * ')
+  async stockSetForRead() {
+    const allCoupon = await this.couponRepository.findAllWithStock();
+    for (const coupon of allCoupon) {
+      await this.couponStockRepository.save(coupon.CouponsStock);
+    }
+    return;
   }
 }

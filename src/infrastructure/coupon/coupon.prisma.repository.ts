@@ -20,17 +20,28 @@ export class CouponPrismaRepository implements ICouponRepository {
       },
     });
   }
+
   async findAll(): Promise<Coupon[]> {
-    // const whereCondition = removeUndefinedKey({
-    //   id: where.id,
-    //   userId: where.userId,
-    //   name: where.name,
-    //   nickName: where.nickName,
-    //   email: where.email,
-    //   phoneNumber: where.phoneNumber,
-    //   deletedAt: null,
-    // });
-    return await this.prisma.coupons.findMany({});
+    return await this.prisma.coupons.findMany({
+      where: {
+        deletedAt: null,
+      },
+    });
+  }
+
+  async findAllWithStock(): Promise<Coupon[]> {
+    return await this.prisma.coupons.findMany({
+      where: {
+        type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+        endDate: {
+          gt: new Date(),
+        },
+        deletedAt: null,
+      },
+      include: {
+        CouponsStock: true,
+      },
+    });
   }
 
   async createWithQuantity(couponCreateOut: CouponCreateOut): Promise<Coupon> {

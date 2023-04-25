@@ -4,9 +4,10 @@ import { AppService } from '../application/app.service';
 import { LoggingInterceptor } from './common/logging.interceptor';
 import { CouponModule } from './coupon/coupon.module';
 import { UserCouponModule } from './user-coupon/user.coupon.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [CouponModule, UserCouponModule],
+  imports: [ScheduleModule.forRoot(), CouponModule, UserCouponModule],
   controllers: [AppController],
   providers: [AppService],
 })

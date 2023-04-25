@@ -6,4 +6,5 @@ export interface ICouponService {
   create: (couponCreateIn: CouponCreateIn) => Promise<Coupon>;
   update: (couponUpdateIn: CouponUpdateIn) => Promise<Coupon>;
   delete: (couponId: number) => Promise<Coupon>;
+  stockSetForRead: () => Promise<void>;
 }
