@@ -42,7 +42,7 @@ model CouponsStock {
   updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
   deletedAt DateTime? @map("deleted_at")
 
-	Coupons Coupons @relation(fields: [couponId], references: [id])
+	Coupons Coupons @relation(fields: [couponId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   @@map("coupons_stock")
 }
 
@@ -88,7 +88,7 @@ model UserCouponsStorage {
   updatedAt DateTime @default(now()) @map("updated_at") @updatedAt
   deletedAt DateTime? @map("deleted_at")
 
-	Coupons Coupons @relation(fields: [couponId], references: [id])
+	Coupons Coupons @relation(fields: [couponId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("user_coupons_storage")
 }

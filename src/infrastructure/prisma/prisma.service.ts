@@ -29,9 +29,9 @@ export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'que
   }
 
   async onModuleInit() {
-    this.$on('query', (e) => {
-      console.log(e.query);
-    });
+    // this.$on('query', (e) => {
+    //   console.log(e.query);
+    // });
     await this.$connect();
   }
 
