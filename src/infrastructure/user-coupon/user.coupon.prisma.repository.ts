@@ -36,6 +36,14 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
 
   async giveWithQuantity(giveOut: IUserCouponGiveOut): Promise<UserCoupon> {
     return await this.prisma.$transaction(async (transaction) => {
+      const beforeUserCoupon = await transaction.userCouponsStorage.findFirst({
+        where: { couponId: giveOut.couponId, userId: giveOut.userId, productId: null, usedDate: null, deletedAt: null },
+      });
+
+      if (beforeUserCoupon) {
+        throw new Error('중복 발급입니다.');
+      }
+
       const couponStock = await transaction.couponsStock.findFirstOrThrow({
         where: {
           couponId: giveOut.couponId,

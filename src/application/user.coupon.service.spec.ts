@@ -139,56 +139,6 @@ describe('User Coupon Service Test  ', () => {
         expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
       });
 
-      test('같은 유저, 같은 쿠폰으로 중복발급인 경우', async () => {
-        const givenCoupon: Coupon = {
-          id: 1,
-          name: '테스트 쿠폰',
-          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
-          count: 50,
-          startDate: new Date(),
-          endDate: dateFns.addDays(new Date(), 7),
-          expireMinute: 6000,
-          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
-          discountAmount: 5000,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
-        };
-
-        const givenGiveIn: IUserCouponGiveIn = {
-          userId: 'testUserId',
-          couponId: 1,
-        };
-
-        const beforeUserCoupon = new UserCoupon(
-          1,
-          givenGiveIn.userId,
-          givenGiveIn.couponId,
-          1,
-          null,
-          new Date(),
-          null,
-          dateFns.addDays(new Date(), 5),
-          1,
-          1,
-          new Date(),
-          new Date(),
-          null,
-        );
-
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
-        userCouponRepository.findOneByCouponIdAndUserId
-          .calledWith(givenGiveIn.couponId, givenGiveIn.userId)
-          .mockResolvedValue(beforeUserCoupon);
-
-        await expect(async () => {
-          await sut.give(givenGiveIn);
-        }).rejects.toThrow('중복 발급입니다.');
-
-        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
-        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
-      });
-
       test('수량 제한이 있는 쿠폰의 재고가 남아있지 않은 경우', async () => {
         const givenCouponStock: CouponStock = {
           id: 1,

@@ -38,11 +38,6 @@ export class UserCouponService implements IUserCouponService {
       throw new Error('발급이 만료된 쿠폰입니다.');
     }
 
-    const beforeUserCoupon = await this.userCouponRepository.findOneByCouponIdAndUserId(giveIn.couponId, giveIn.userId);
-    if (beforeUserCoupon) {
-      throw new Error('중복 발급입니다.');
-    }
-
     const calCouponExpireDate = dateFns.addMinutes(now, coupon.expireMinute);
     const expireDate = coupon.endDate > calCouponExpireDate ? calCouponExpireDate : coupon.endDate;
 
