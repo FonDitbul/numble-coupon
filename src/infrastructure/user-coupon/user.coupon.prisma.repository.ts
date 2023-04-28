@@ -18,6 +18,12 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
     return await this.prisma.userCouponsStorage.findFirst({ where: { id: id, deletedAt: null } });
   }
 
+  async findOneByCouponIdAndUserId(couponId: number, userId: string): Promise<UserCoupon> {
+    return await this.prisma.userCouponsStorage.findFirst({
+      where: { couponId: couponId, userId: userId, productId: null, usedDate: null, deletedAt: null },
+    });
+  }
+
   async giveWithoutQuantity(giveOut: IUserCouponGiveOut): Promise<UserCoupon> {
     return await this.prisma.$transaction(async (transaction) => {
       return await transaction.userCouponsStorage.create({

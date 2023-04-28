@@ -9,6 +9,7 @@ import {
 
 export interface IUserCouponRepository {
   findOneById: (id: number) => Promise<UserCoupon>;
+  findOneByCouponIdAndUserId: (couponId: number, userId: string) => Promise<UserCoupon | null>;
   giveWithoutQuantity: (giveOut: IUserCouponGiveOut) => Promise<UserCoupon>;
   giveWithQuantity: (giveOut: IUserCouponGiveOut) => Promise<UserCoupon>;
   findAll: (findAllOut: IUserCouponFindAllOut) => Promise<UserCoupon[]>;
