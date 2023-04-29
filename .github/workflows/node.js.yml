@@ -48,7 +48,9 @@ jobs:
         run: npm run build
       - name: 테스트
         run: npm run test
-      - name: e2e test
+      - name: dotenv 설치
+        run: npm i -g dotenv-cli
+      - name: e2e migrate
         run: npm run test:migrate
       - name: e2e test
         run: npm run test:e2e
