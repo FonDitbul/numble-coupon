@@ -32,7 +32,7 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
           userId: giveOut.userId,
           productId: null,
           usedDate: null,
-          expireDate: { lt: new Date() },
+          expireDate: { gt: new Date() },
           deletedAt: null,
         },
       });
@@ -57,7 +57,7 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
           userId: giveOut.userId,
           productId: null,
           usedDate: null,
-          expireDate: { lt: new Date() },
+          expireDate: { gt: new Date() },
           deletedAt: null,
         },
       });

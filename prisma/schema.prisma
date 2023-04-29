@@ -44,6 +44,7 @@ model CouponsStock {
 
 	Coupons Coupons @relation(fields: [couponId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   @@map("coupons_stock")
+  @@index([couponId])
 }
 
 model CouponsHistory {
@@ -91,6 +92,7 @@ model UserCouponsStorage {
 	Coupons Coupons @relation(fields: [couponId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("user_coupons_storage")
+  @@index([userId, couponId])
 }
 
 model UserCouponsStorageHistory {
