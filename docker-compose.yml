@@ -1,0 +1,38 @@
+version: '2.17.3'
+
+services:
+  db:
+    image: postgres:13
+    restart: always
+    container_name: numble_coupon_db
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DB: numble-coupon, coupon-test
+
+  redis_cache:
+    image: redis:latest
+    container_name: numble_coupon_redis_cache
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/data:/data
+      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    restart: always
+    command: redis-server /usr/local/conf/redis.conf
+
+  backend:
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app/
+    command: [ "dotenv", "-e", ".env.production", "node", "dist/main.js" ]
+
