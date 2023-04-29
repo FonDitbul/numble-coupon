@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package coupon;
+
+service CouponService {
+  rpc FindAll (FindAllQuery) returns (stream Coupons) {}
+  rpc Create (CreateCoupon) returns (Coupon) {}
+  rpc Update (UpdateCoupon) returns (Coupon) {}
+  rpc Delete (DeleteById) returns (Coupon) {}
+}
+
+message FindAllQuery {}
+
+message Coupons {
+  repeated Coupon coupons = 1;
+}
+
+message Coupon {
+  int32 id = 1;
+  string name = 2;
+  int32 type = 3;
+  int32 count = 4;
+
+  string startDate = 5;
+  string endDate = 6;
+  int32 expireMinute = 7;
+
+  int32 discountType = 8;
+  int32 discountAmount = 9;
+
+  string createdAt = 10;
+  string updatedAt = 11;
+  string deletedAt = 12;
+  optional CouponStock CouponsStock = 13;
+}
+
+message CouponStock {
+  int32 id = 1;
+  int32 couponId = 2;
+  int32 count = 3;
+  int32 version = 4;
+
+  string createdAt = 5;
+  string updatedAt = 6;
+  string deletedAt = 7;
+}
+
+message CreateCoupon {
+  string name = 1;
+  int32 type = 2;
+  int32 count = 3;
+
+  string startDate = 4;
+  string endDate = 5;
+  int32 expireMinute = 6;
+
+  int32 discountType = 7;
+  int32 discountAmount = 8;
+}
+
+message UpdateCoupon {
+  int32 couponId = 1;
+  string name = 2;
+  int32 type = 3;
+  int32 count = 4;
+
+  string startDate = 5;
+  string endDate = 6;
+  int32 expireMinute = 7;
+
+  int32 discountType = 8;
+  int32 discountAmount = 9;
+}
+
+message DeleteById {
+  int32 couponId = 1;
+}
