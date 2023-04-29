@@ -6,17 +6,17 @@ services:
     restart: always
     container_name: numble_coupon_db
     ports:
-      - '5432:5432'
+      - '54320:5432'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_MULTIPLE_DB: numble-coupon, coupon-test
+      POSTGRES_DB: numble-coupon
 
   redis_cache:
     image: redis:latest
     container_name: numble_coupon_redis_cache
     ports:
-      - 6379:6379
+      - 63790:6379
     volumes:
       - ./redis/data:/data
       - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
@@ -30,9 +30,16 @@ services:
     build:
       dockerfile: ./Dockerfile
       context: .
+    depends_on:
+      - db
+      - redis_cache
     ports:
       - "3000:3000"
+    env_file: 
+      - .env.production.docker
     volumes:
-      - ./:/app/
-    command: [ "dotenv", "-e", ".env.production", "node", "dist/main.js" ]
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    command: ["node", "dist/main.js"]
+
 

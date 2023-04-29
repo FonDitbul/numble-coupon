@@ -15,7 +15,7 @@
     "start:prod": "dotenv -e .env.production node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "migrate:dev": "dotenv -e .env -- npx prisma migrate dev --name postgres-init",
-    "migrate:prod": "dotenv -e .env.production -- npx prisma migrate --name postgres-init",
+    "migrate:prod": "dotenv -e .env.production npx prisma migrate dev --name postgres-init",
     "push:dev": "dotenv -e .env -- npx prisma db push dev",
     "push:prod": "dotenv -e .env.production -- npx prisma db push",
     "test": "jest",
