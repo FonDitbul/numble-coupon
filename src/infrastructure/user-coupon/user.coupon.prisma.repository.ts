@@ -114,6 +114,9 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
       take: findAllOut.take,
       skip: findAllOut.couponIdCursor ? 1 : 0,
       ...(findAllOut.couponIdCursor && { cursor: { id: findAllOut.couponIdCursor } }),
+      orderBy: {
+        id: 'desc',
+      },
     });
   }
 
