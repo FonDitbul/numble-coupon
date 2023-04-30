@@ -78,7 +78,7 @@
 
 # 2.1 디자인 아키텍처
 
-![Untitled Diagram.drawio.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0c72c6a4-265d-4c89-a55c-f6a0890be1e8/Untitled_Diagram.drawio.png)
+![Untitled Diagram drawio](https://user-images.githubusercontent.com/49264688/235345880-a24eeecb-2563-49ec-9b3e-32b71e23e585.png)
 
 - Redis
     - Redis 는 하단에 존재하는 `coupons_stock`  테이블의 read를 위해 존재합니다.
@@ -91,7 +91,8 @@
 # 2.2 Database
 
 ## ERD
-<ERD 사진>
+
+![ERD](https://user-images.githubusercontent.com/49264688/235345892-be5d6a60-5e4a-4db6-ba3f-9844f110f8c4.PNG)
 
 ## DB
 
@@ -538,7 +539,7 @@
         - couponId가 동일하지 않을 경우
         - 다른 user의 쿠폰일 경우
 
-### 유저의 쿠폰 사용 취소 (완료)
+### 유저의 쿠폰 사용 취소
 
 - method: UseCancel
 - Request Body
@@ -684,8 +685,7 @@ npm run start:dev
 
 npm run start:prod
 ```
-
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/83d8a536-3279-495d-85d6-fd6072fa0b5e/Untitled.png)
+![nest_실행](https://user-images.githubusercontent.com/49264688/235345922-98c012c9-87ff-4aae-be6c-19ad4cf6b986.png)
 
 ### 3.2 with docekr  compose
 
@@ -719,7 +719,7 @@ npm run migrate:docker
 npm run test
 ```
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/c722e08a-f749-4940-afa4-501f5d373fd3/Untitled.png)
+![유닛테스트실행](https://user-images.githubusercontent.com/49264688/235345934-c5309644-cc1d-410c-b6bb-04ed056051a2.png)
 
 - 특정 test 파일만 보고싶은 경우
 
@@ -729,14 +729,13 @@ npm run test
 
 - coupon.service.sepc.ts
     - 결과
-
-  ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/0778ab62-6846-4733-94a4-2d512e2607b5/Untitled.png)
+   
+![coupon_service_spec_ts](https://user-images.githubusercontent.com/49264688/235345943-7ff1763a-11cc-4b15-86ce-8ce6a1bbf79f.png)
 
 - user.coupon.service.sepc.ts
     - 결과
 
-  ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/63798ec4-db0f-4bba-b259-8094e7076ad2/Untitled.png)
-
+![user_coupon_service_spec_ts](https://user-images.githubusercontent.com/49264688/235345954-92d915b1-25a5-49d9-8334-4c98014f5f29.png)
 
 ### 4.2 E2E 테스트
 
@@ -757,7 +756,8 @@ npm run test
 
 - 결과
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d27afa04-9a25-4b26-82be-4e7552ae49f7/Untitled.png)
+![e2e_test](https://user-images.githubusercontent.com/49264688/235345962-d3861cbe-c2f8-4ae1-92c9-fe90274579f7.png)
+
 
 ### 4.3 성능 테스트
 
@@ -791,6 +791,7 @@ npm run test
         - 총 2개의 API를 호출합니다.
     1. 100만개의 쿠폰이 있을 때 vues 100 ~ 200 인 경우
 
+
     ```bash
     checks ............: 94.96% 991524 x 52569
     data_received .....: 982MB 109kB/s
@@ -805,12 +806,15 @@ npm run test
     vus_max ...........: 200 min=200 max=200
     ```
 
-  ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/776023f9-8849-472d-affb-c527709f96fa/Untitled.png)
 
-    - vus를 늘렸을 때, 해당 request도 같이 증가 해야 하지만 약 150의 vus 이후로 request 가 늘어나지 않는 것으로 볼 수 있다.
-        - `따라서 vus가 150이 임계점이라고 판단`된다.
-    - 또한 RPS 는 위의 정보와 같이 `RPS = 115`이다.
-    1. 1만개의 쿠폰에서 vues 가 200, 250, 300 인 경우
+![performace_test_1](https://user-images.githubusercontent.com/49264688/235345966-6a6e835b-9c3e-4413-b1c0-f5c59bed2c65.png)
+
+
+* vus를 늘렸을 때, 해당 request도 같이 증가 해야 하지만 약 150의 vus 이후로 request 가 늘어나지 않는 것으로 볼 수 있다.
+        - 따라서 vus가 150이 임계점이라고 판단 된다.
+    - 또한 RPS 는 위의 정보와 같이 RPS = 115이다.
+----
+    2. 1만개의 쿠폰에서 vues 가 200, 250, 300 인 경우
 
     ```bash
     ✗ status is OK
@@ -830,7 +834,8 @@ npm run test
     ```
 
 
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ec7485c6-81dc-446d-90e0-52d94f9d67ec/Untitled.png)
+![performance_test_2](https://user-images.githubusercontent.com/49264688/235345975-6b64e509-d7e5-4621-ad41-19920a84c107.png)
+
 
 - 성능 테스트 결과
     - vues 가 150~ 200 정도가 최대이며 그이상일 경우 요청이 더이상 늘어나지 않았다.
