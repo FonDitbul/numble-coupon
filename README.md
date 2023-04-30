@@ -1,5 +1,7 @@
 # [Numble] E-commerce 마이크로 서비스 설계 딥다이브
 
+## 회고록
+https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C-%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%84%A4%EA%B3%84-%EB%94%A5%EB%8B%A4%EC%9D%B4%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D
 # 목차
 
 1. 요구사항 정리
