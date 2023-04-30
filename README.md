@@ -785,12 +785,12 @@ npm run test
     ```
 
 - 부하 테스트는 ‘쿠폰 발급’ 에 대한 테스트만 진행하였습니다.
-- 쿠폰 발급 부하 테스트 시나리오
+
+### 쿠폰 발급 부하 테스트 시나리오
     - 30분 마다 100, 150, 200, 150, 100 의 경우를 테스트 하였다.
     - 해당 user는 발급 가능한 모든 쿠폰(FindAll) 을 부른 후 발급(Give) 한다.
         - 총 2개의 API를 호출합니다.
-    1. 100만개의 쿠폰이 있을 때 vues 100 ~ 200 인 경우
-
+1. 100만개의 쿠폰이 있을 때 vues 100 ~ 200 인 경우
 
     ```bash
     checks ............: 94.96% 991524 x 52569
@@ -817,26 +817,24 @@ npm run test
     2. 1만개의 쿠폰에서 vues 가 200, 250, 300 인 경우
 
     ```bash
-    ✗ status is OK
-            ↳  99% — ✓ 13010 / ✗ 8
-    
-         checks...............: 99.93% ✓ 13010      ✗ 8
-         data_received........: 13 MB  136 kB/s
-         data_sent............: 3.9 MB 43 kB/s
-         group_duration.......: avg=395.5ms  min=10.98ms med=400.56ms max=1.14s p(90)=69                                                          8.98ms p(95)=788.6ms
-         grpc_req_duration....: avg=197.54ms min=2.12ms  med=16.3ms   max=1.13s p(90)=60                                                          6.96ms p(95)=691.79ms
-         iteration_duration...: avg=1.39s    min=1.01s   med=1.4s     max=2.14s p(90)=1.                                                          7s     p(95)=1.79s
-         iterations...........: 13018  142.249579/s
-         request_per_give.....: 13018  142.249579/s
-         response_per_give....: 13010  142.162162/s
-         vus..................: 154    min=6        max=299
-         vus_max..............: 300    min=300      max=300
+    checks...............: 99.93% ✓ 13010      ✗ 8
+    data_received........: 13 MB  136 kB/s
+    data_sent............: 3.9 MB 43 kB/s
+    group_duration.......: avg=395.5ms  min=10.98ms med=400.56ms max=1.14s p(90)=698.98ms p(95)=788.6ms
+    grpc_req_duration....: avg=197.54ms min=2.12ms  med=16.3ms   max=1.13s p(90)=606.96ms p(95)=691.79ms
+    iteration_duration...: avg=1.39s    min=1.01s   med=1.4s     max=2.14s p(90)=1.7s     p(95)=1.79s
+    iterations...........: 13018  142.249579/s
+    request_per_give.....: 13018  142.249579/s
+    response_per_give....: 13010  142.162162/s
+    vus..................: 154    min=6        max=299
+    vus_max..............: 300    min=300      max=300
     ```
 
 
 ![performance_test_2](https://user-images.githubusercontent.com/49264688/235345975-6b64e509-d7e5-4621-ad41-19920a84c107.png)
 
 
+----
 - 성능 테스트 결과
     - vues 가 150~ 200 정도가 최대이며 그이상일 경우 요청이 더이상 늘어나지 않았다.
         - vueser 의 임계점은 150~200 정도이다.
