@@ -5,16 +5,23 @@ import { UserCouponService } from './user.coupon.service';
 import { UserCoupon } from '../domain/user-coupon/user.coupon';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import * as dateFns from 'date-fns';
-import { IUserCouponFindAllOut } from '../domain/user-coupon/user.coupon.out';
 import { IUserCouponDeleteIn, IUserCouponFindAllIn, IUserCouponGiveIn, IUserCouponUseCancelIn } from '../domain/user-coupon/user.coupon.in';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
-import { CouponStock } from '../domain/coupon/coupon.stock';
+import { ICouponCacheRepository } from '../domain/coupon/coupon.cache.repository';
+import { IUserCouponCacheRepository } from '../domain/user-coupon/user.coupon.cache.repository';
 
 describe('User Coupon Service Test  ', () => {
-  const userCouponRepository: MockProxy<IUserCouponRepository> = mock<IUserCouponRepository>();
   const couponRepository: MockProxy<ICouponRepository> = mock<ICouponRepository>();
+  const couponCacheRepository: MockProxy<ICouponCacheRepository> = mock<ICouponCacheRepository>();
+  const userCouponRepository: MockProxy<IUserCouponRepository> = mock<IUserCouponRepository>();
+  const userCouponCacheRepository: MockProxy<IUserCouponCacheRepository> = mock<IUserCouponCacheRepository>();
 
-  const sut: IUserCouponService = new UserCouponService(userCouponRepository, couponRepository);
+  const sut: IUserCouponService = new UserCouponService(
+    couponRepository,
+    couponCacheRepository,
+    userCouponRepository,
+    userCouponCacheRepository,
+  );
 
   beforeEach(() => {
     mockReset(userCouponRepository);
@@ -43,7 +50,8 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
         };
 
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        userCouponCacheRepository.setGiveUser.mockResolvedValue(1);
 
         const result = await sut.give(givenGiveIn);
 
@@ -52,15 +60,6 @@ describe('User Coupon Service Test  ', () => {
       });
 
       test('수량 제한이 있는 쿠폰 발급 성공', async () => {
-        const givenCouponStock: CouponStock = {
-          id: 1,
-          couponId: 1,
-          count: 50,
-          version: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
-        };
         const givenCoupon: Coupon = {
           id: 1,
           name: '테스트 쿠폰',
@@ -74,7 +73,7 @@ describe('User Coupon Service Test  ', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
-          CouponsStock: givenCouponStock,
+          couponStock: 1,
         };
 
         const givenGiveIn: IUserCouponGiveIn = {
@@ -82,7 +81,9 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
         };
 
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        userCouponCacheRepository.setGiveUser.mockResolvedValue(1);
+        couponCacheRepository.countStock.calledWith(givenGiveIn.couponId).mockResolvedValue(10);
 
         const result = await sut.give(givenGiveIn);
 
@@ -98,7 +99,7 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
         };
 
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(null);
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(null);
 
         await expect(async () => {
           await sut.give(givenGiveIn);
@@ -108,7 +109,7 @@ describe('User Coupon Service Test  ', () => {
         expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
       });
 
-      test('쿠폰이 endDate (발급 만료 날짜) 가 지난 경우', async () => {
+      test('발급 기간이 지나서 발급이 불가능한 경우', async () => {
         const givenCoupon: Coupon = {
           id: 1,
           name: '테스트 쿠폰',
@@ -122,6 +123,7 @@ describe('User Coupon Service Test  ', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
+          couponStock: 1,
         };
 
         const givenGiveIn: IUserCouponGiveIn = {
@@ -129,26 +131,14 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
         };
 
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
 
         await expect(async () => {
           await sut.give(givenGiveIn);
-        }).rejects.toThrow('발급이 만료된 쿠폰입니다.');
-
-        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
-        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+        }).rejects.toThrow('기간이 지나 발급이 불가능한 쿠폰입니다.');
       });
 
-      test('수량 제한이 있는 쿠폰의 재고가 남아있지 않은 경우', async () => {
-        const givenCouponStock: CouponStock = {
-          id: 1,
-          couponId: 1,
-          count: 0,
-          version: 50,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
-        };
+      test('이미 발급된 쿠폰이 존재한 경우', async () => {
         const givenCoupon: Coupon = {
           id: 1,
           name: '테스트 쿠폰',
@@ -162,7 +152,7 @@ describe('User Coupon Service Test  ', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
-          CouponsStock: givenCouponStock,
+          couponStock: 1,
         };
 
         const givenGiveIn: IUserCouponGiveIn = {
@@ -170,14 +160,43 @@ describe('User Coupon Service Test  ', () => {
           couponId: 1,
         };
 
-        couponRepository.findOneWithStockById.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        userCouponCacheRepository.setGiveUser.mockResolvedValue(0);
 
         await expect(async () => {
           await sut.give(givenGiveIn);
-        }).rejects.toThrow('남은 재고가 존재하지 않습니다.');
+        }).rejects.toThrow('이미 발급된 쿠폰이 존재합니다.');
+      });
 
-        expect(userCouponRepository.giveWithoutQuantity.mock.calls.length).toBe(0);
-        expect(userCouponRepository.giveWithQuantity.mock.calls.length).toBe(0);
+      test('모든 쿠폰이 발급되어 재고가 없는 경우', async () => {
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 50,
+          startDate: new Date(),
+          endDate: dateFns.addDays(new Date(), 7),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 5000,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+          couponStock: 1,
+        };
+
+        const givenGiveIn: IUserCouponGiveIn = {
+          userId: 'testUserId',
+          couponId: 1,
+        };
+
+        couponCacheRepository.findOneByCouponId.calledWith(givenGiveIn.couponId).mockResolvedValue(givenCoupon);
+        userCouponCacheRepository.setGiveUser.mockResolvedValue(1);
+        couponCacheRepository.countStock.calledWith(givenGiveIn.couponId).mockResolvedValue(50);
+
+        await expect(async () => {
+          await sut.give(givenGiveIn);
+        }).rejects.toThrow('재고가 없습니다.');
       });
     });
   });

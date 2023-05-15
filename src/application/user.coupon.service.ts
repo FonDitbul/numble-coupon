@@ -18,31 +18,36 @@ import {
 } from '../domain/user-coupon/user.coupon.out';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import * as dateFns from 'date-fns';
+import { ICouponCacheRepository } from '../domain/coupon/coupon.cache.repository';
+import { IUserCouponCacheRepository } from '../domain/user-coupon/user.coupon.cache.repository';
 
 @Injectable()
 export class UserCouponService implements IUserCouponService {
   constructor(
-    @Inject('IUserCouponRepository') private userCouponRepository: IUserCouponRepository,
     @Inject('ICouponRepository') private couponRepository: ICouponRepository,
+    @Inject('ICouponCacheRepository') private couponCacheRepository: ICouponCacheRepository,
+    @Inject('IUserCouponRepository') private userCouponRepository: IUserCouponRepository,
+    @Inject('IUserCouponCacheRepository') private userCouponCacheRepository: IUserCouponCacheRepository,
   ) {}
 
-  async give(giveIn: IUserCouponGiveIn): Promise<UserCoupon> {
-    const coupon = await this.couponRepository.findOneWithStockById(giveIn.couponId);
+  async give(giveIn: IUserCouponGiveIn): Promise<void> {
+    const userId = giveIn.userId;
+    const coupon = await this.couponCacheRepository.findOneByCouponId(giveIn.couponId);
 
     const now = new Date();
     if (Coupon.isExistCoupon(coupon)) {
       throw new Error('존재하지 않는 쿠폰입니다.');
     }
 
-    if (Coupon.isEndDateExpire(coupon.endDate, now)) {
-      throw new Error('발급이 만료된 쿠폰입니다.');
-    }
-
     const calCouponExpireDate = dateFns.addMinutes(now, coupon.expireMinute);
     const expireDate = coupon.endDate > calCouponExpireDate ? calCouponExpireDate : coupon.endDate;
 
+    if (Coupon.isEndDateExpire(coupon.endDate, now)) {
+      throw new Error('기간이 지나 발급이 불가능한 쿠폰입니다.');
+    }
+
     const userCouponGiveOut: IUserCouponGiveOut = {
-      userId: giveIn.userId,
+      userId: userId,
       couponId: coupon.id,
       couponNumber: coupon.count,
       giveDate: now,
@@ -50,17 +55,25 @@ export class UserCouponService implements IUserCouponService {
       discountType: coupon.discountType,
       discountAmount: coupon.discountAmount,
     };
+
+    const findOneUserCoupon = await this.userCouponCacheRepository.setGiveUser({ couponId: coupon.id, userId: userId });
+    if (!findOneUserCoupon) {
+      throw new Error('이미 발급된 쿠폰이 존재합니다.');
+    }
+
     if (Coupon.isWithoutQuantityType(coupon.type)) {
-      return await this.userCouponRepository.giveWithoutQuantity(userCouponGiveOut);
+      await this.userCouponRepository.giveWithoutQuantity(userCouponGiveOut);
+      return;
     }
 
-    const couponStock = coupon.CouponsStock;
+    const couponStock = await this.couponCacheRepository.countStock(coupon.id);
 
-    if (couponStock.count === 0) {
-      throw new Error('남은 재고가 존재하지 않습니다.');
+    if (couponStock >= coupon.count) {
+      throw new Error('재고가 없습니다.');
     }
 
-    return await this.userCouponRepository.giveWithQuantity(userCouponGiveOut);
+    await this.userCouponRepository.giveWithQuantity(userCouponGiveOut);
+    return;
   }
 
   async findAll(findAllIn: IUserCouponFindAllIn): Promise<UserCoupon[]> {

@@ -5,8 +5,7 @@ import { CouponService } from '../../application/coupon.service';
 import { CouponPrismaRepository } from './coupon.prisma.repository';
 import { PrismaService } from '../prisma/prisma.service';
 import * as path from 'path';
-import { RedisCacheModule } from '../cache/redis.module';
-import { CouponStockRedisRepository } from './coupon.stock.redis.repository';
+import { CouponRedisRepository } from './coupon.redis.repository';
 
 @Module({
   imports: [
@@ -20,13 +19,12 @@ import { CouponStockRedisRepository } from './coupon.stock.redis.repository';
         },
       },
     ]),
-    RedisCacheModule,
   ],
   controllers: [CouponController],
   providers: [
     { provide: 'ICouponService', useClass: CouponService },
     { provide: 'ICouponRepository', useClass: CouponPrismaRepository },
-    { provide: 'ICouponStockRepository', useClass: CouponStockRedisRepository },
+    { provide: 'ICouponCacheRepository', useClass: CouponRedisRepository },
     PrismaService,
   ],
 })

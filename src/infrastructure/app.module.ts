@@ -4,10 +4,21 @@ import { AppService } from '../application/app.service';
 import { LoggingInterceptor } from './common/logging.interceptor';
 import { CouponModule } from './coupon/coupon.module';
 import { UserCouponModule } from './user-coupon/user.coupon.module';
-import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
-  imports: [ScheduleModule.forRoot(), CouponModule, UserCouponModule],
+  imports: [
+    CouponModule,
+    UserCouponModule,
+    RedisModule.forRoot({
+      config: {
+        host: process.env.REDIS_HIST,
+        port: +process.env.REDIS_PORT,
+      },
+    }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

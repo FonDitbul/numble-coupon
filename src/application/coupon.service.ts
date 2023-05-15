@@ -1,18 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ICouponService } from '../domain/coupon/coupon.service';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import { CouponCreateIn, CouponUpdateIn } from '../domain/coupon/coupon.in';
 import { CouponCreateOut, CouponUpdateOut } from '../domain/coupon/coupon.out';
-import { ICouponStockRepository } from '../domain/coupon/coupon.stock.repository';
-import { Cron } from '@nestjs/schedule';
-
+import { ICouponCacheRepository } from '../domain/coupon/coupon.cache.repository';
+import * as dateFns from 'date-fns';
 @Injectable()
 export class CouponService implements ICouponService {
   constructor(
     @Inject('ICouponRepository') private couponRepository: ICouponRepository,
-    @Inject('ICouponStockRepository') private couponStockRepository: ICouponStockRepository,
+    @Inject('ICouponCacheRepository') private couponCacheRepository: ICouponCacheRepository,
   ) {}
+
   async findAll(): Promise<Coupon[]> {
     const couponArray = await this.couponRepository.findAll();
 
@@ -25,10 +25,11 @@ export class CouponService implements ICouponService {
         });
         continue;
       }
-      const couponStock = await this.couponStockRepository.findOneByCouponId(coupon.id);
+
+      const couponStock = await this.couponCacheRepository.countStock(coupon.id);
       resultCoupon.push({
         ...coupon,
-        CouponsStock: couponStock,
+        couponStock: couponStock,
       });
     }
     return resultCoupon;
@@ -63,13 +64,21 @@ export class CouponService implements ICouponService {
       if (!Coupon.isValidWithoutQuantityTypeCount(count)) {
         throw new Error('without quantity type 일 경우 count 는 반드시 0이여야 합니다.');
       }
-      return await this.couponRepository.createWithoutQuantity(couponCreateOut);
+      const coupon = await this.couponRepository.createWithoutQuantity(couponCreateOut);
+      await this.couponCacheRepository.create(coupon);
+      return coupon;
     }
 
     if (!Coupon.isValidWithQuantityTypeCount(count)) {
       throw new Error('with quantity type 일 경우 count 는 반드시 0이상 이여야 합니다.');
     }
-    return await this.couponRepository.createWithQuantity(couponCreateOut);
+
+    const coupon = await this.couponRepository.createWithQuantity(couponCreateOut);
+    coupon.couponStock = coupon.count;
+
+    await this.couponCacheRepository.create(coupon);
+
+    return coupon;
   }
 
   async update(couponUpdateIn: CouponUpdateIn): Promise<Coupon> {
@@ -114,14 +123,20 @@ export class CouponService implements ICouponService {
       if (!Coupon.isValidWithoutQuantityTypeCount(count)) {
         throw new Error('without quantity type 일 경우 count 는 반드시 0이여야 합니다.');
       }
-      return await this.couponRepository.updateWithoutQuantity(couponUpdateOut);
+      const updatedCoupon = await this.couponRepository.updateWithoutQuantity(couponUpdateOut);
+      await this.couponCacheRepository.create(updatedCoupon);
+
+      return updatedCoupon;
     }
 
     if (!Coupon.isValidWithQuantityTypeCount(count)) {
       throw new Error('with quantity type 일 경우 count 는 반드시 0이상 이여야 합니다.');
     }
 
-    return await this.couponRepository.updateWithQuantity(couponUpdateOut);
+    const updatedCoupon = await this.couponRepository.updateWithQuantity(couponUpdateOut);
+    await this.couponCacheRepository.create(updatedCoupon);
+
+    return updatedCoupon;
   }
 
   async delete(couponId: number): Promise<Coupon> {
@@ -132,14 +147,5 @@ export class CouponService implements ICouponService {
     }
 
     return await this.couponRepository.delete(couponId);
-  }
-
-  @Cron('30 * * * * * ')
-  async stockSetForRead() {
-    const allCoupon = await this.couponRepository.findAllWithStock();
-    for (const coupon of allCoupon) {
-      await this.couponStockRepository.save(coupon.CouponsStock);
-    }
-    return;
   }
 }

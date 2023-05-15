@@ -21,8 +21,9 @@ export class UserCouponController {
   constructor(@Inject('IUserCouponService') private userCouponService: IUserCouponService) {}
 
   @GrpcMethod('UserCouponService', 'Give')
-  async give(@Body() giveReq: IUserCouponGiveReq): Promise<IUserCouponGiveRes> {
-    return await this.userCouponService.give(giveReq);
+  async give(@Body() giveReq: IUserCouponGiveReq): Promise<{ isReceived: boolean }> {
+    await this.userCouponService.give(giveReq);
+    return { isReceived: true };
   }
 
   @GrpcMethod('UserCouponService', 'FindAll')
