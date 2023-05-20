@@ -11,6 +11,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: numble-coupon
+      POSTGRES_SHARED_PRELOAD_LIBRARIES: pg_stat_statements
 
   redis_cache:
     image: redis:latest

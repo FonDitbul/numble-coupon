@@ -9,8 +9,8 @@ const requestPerGive = new Counter('request_per_give');
 const responsePerGive = new Counter('response_per_give');
 
 export const options = {
-  vus: 500,
-  duration: '1h',
+  vus: 1500,
+  duration: '1m',
 };
 
 export default () => {
