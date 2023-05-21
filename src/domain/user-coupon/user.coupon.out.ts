@@ -1,5 +1,3 @@
-import { Coupon } from '../coupon/coupon';
-
 export interface IUserCouponGiveOut {
   userId: string;
   couponId: number;
@@ -37,12 +35,6 @@ export interface IUserCouponCacheFindOneOut {
 
 export interface IUserCouponCacheSaveOut {
   couponId: number;
-  userId: string;
-  expireSecond: number;
-}
-
-export interface IUserCouponCacheGiveOut {
-  coupon: Coupon;
   userId: string;
   expireSecond: number;
 }

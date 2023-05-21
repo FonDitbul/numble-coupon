@@ -24,16 +24,6 @@ export class CouponRedisRepository implements ICouponCacheRepository {
     return oneCoupon;
   }
 
-  async findOneStockByCouponId(couponId: number): Promise<number> {
-    const oneCoupon = this.transform(await this.client.get(this.prefixCouponId + couponId.toString()));
-
-    if (!oneCoupon || !oneCoupon.couponStock) {
-      return 0;
-    }
-
-    return oneCoupon.couponStock;
-  }
-
   async create(coupon: Coupon) {
     await this.client.set(this.prefixCouponId + coupon.id.toString(), JSON.stringify(coupon), 'NX');
   }

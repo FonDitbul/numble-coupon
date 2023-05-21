@@ -88,24 +88,7 @@ export class UserCouponService implements IUserCouponService {
       couponIdCursor: findAllIn.couponIdCursor,
     };
     const userCouponArray = await this.userCouponRepository.findAll(findAllOut);
-    const userCouponObj = userCouponArray.map(
-      (userCoupon) =>
-        new UserCoupon(
-          userCoupon.id,
-          userCoupon.userId,
-          userCoupon.couponId,
-          userCoupon.productId,
-          userCoupon.giveDate,
-          userCoupon.usedDate,
-          userCoupon.expireDate,
-          userCoupon.discountType,
-          userCoupon.discountAmount,
-          userCoupon.createdAt,
-          userCoupon.updatedAt,
-          userCoupon.deletedAt,
-          userCoupon.Coupons,
-        ),
-    );
+
     return userCouponArray;
   }
 
