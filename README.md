@@ -1,6 +1,10 @@
 # [Numble] E-commerce 마이크로 서비스 설계 딥다이브
 
-## 회고록
+# 2023-05-21 개선
+
+
+----
+## 제출 회고록
 https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C-%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%84%A4%EA%B3%84-%EB%94%A5%EB%8B%A4%EC%9D%B4%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D
 # 목차
 
@@ -84,12 +88,8 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 ![Untitled Diagram drawio](https://user-images.githubusercontent.com/49264688/235345880-a24eeecb-2563-49ec-9b3e-32b71e23e585.png)
 
 - Redis
-    - Redis 는 하단에 존재하는 `coupons_stock`  테이블의 read를 위해 존재합니다.
-    - 모든 쿠폰을 불러올 때, 해당 쿠폰에 대한 남은 재고를 사용자에게 보여줘야합니다.
-    - 실시간성으로 해당 DB를 read 하는 것 보다
-    - nest js 에서 제공하는 배치(Schedule) 을 사용하여 시간 (Ex: 5분) 마다 데이터를 sync합니다.
-        - 해당 redis에 종료되지 않은 쿠폰들에 대하여 coupons_stock 에 재고 정보를 저장 합니다.
-    - 따라서 사용자는 ‘쿠폰 불러오기’ 시에 항상 coupons_stock 테이블을 read 하지 않고 redis에 존재하는 정보를 보여줍니다.
+    - Redis 는 '유저에게 쿠폰 발급'시 발급 가능한 상태인지 확인하기 위해 사용됩니다.
+    - 쿠폰 발급 시 RDB 는 데이터 write 을 책임지고 이외에는 redis 에서 사용합니다.
 
 # 2.2 Database
 
@@ -115,18 +115,6 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 | expire_minute | int4 | true | 발급 이후 만료 시간 (단위 분)  |
 | discount_type | int4 | true | 쿠폰 할인 타입 1) 할인율  2) 절대 할인 금액 |
 | discount_amount | int4 | true | 할인 타입에 따른 할인 양 type 1) 1~100 2) x > 0 |
-| created_at | timestamp(3) | true | 레코드 생성 시간 |
-| updated_at | timestamp(3) | true | 레코드 업데이트 시간 |
-| deleted_at | timestamp(3) | false | 레코드 삭제 시간 |
-
-### coupons_stock
-
-| columns | data type | not null | 설명 |
-| --- | --- | --- | --- |
-| id | serial4 | true | PK) |
-| couponId | int4 | true | FK) coupons.id |
-| count | int4 | true | 쿠폰 남은 재고 수량 |
-| version | int4 | true | 낙관적 락 version |
 | created_at | timestamp(3) | true | 레코드 생성 시간 |
 | updated_at | timestamp(3) | true | 레코드 업데이트 시간 |
 | deleted_at | timestamp(3) | false | 레코드 삭제 시간 |
@@ -223,16 +211,8 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
     			"createdAt": "Sat Apr 29 2023 15:36:22 GMT+0900 (대한민국 표준시)",
     			"updatedAt": "Sat Apr 29 2023 15:36:22 GMT+0900 (대한민국 표준시)",
     			"deletedAt": "",
-    			"CouponsStock": {
-    				"id": 0,
-    				"couponId": 1,
-    				"count": 0,
-    				"version": 0,
-    				"createdAt": "Sun Apr 30 2023 15:40:40 GMT+0900 (대한민국 표준시)",
-    				"updatedAt": "Sun Apr 30 2023 15:40:40 GMT+0900 (대한민국 표준시)",
-    				"deletedAt": ""
-    			},
-    			"_CouponsStock": "CouponsStock"
+    			"couponsStock": 100000,
+    			"_couponsStock": "couponsStock"
     		},
     		{
     			"id": 2,
@@ -255,31 +235,30 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - 설명
     - `발급 가능한 모든 coupon을 보여줍니다.`
     - 수량이 존재하는 쿠폰의 경우
-        - CouponStock 의 property를 줍니다.
-            - 해당 데이터의 id, count가 0일 경우
-                - 아직 배치를 통해 해당 데이터를 업데이트 하지 않은 경우입니다.
+        - couponsStock 는 남은 쿠폰 수량을 말합니다.
+
 
 ### 쿠폰 생성
 
 - method : Create
 - Request body
 
-    ```jsx
+    ```json
     {
-    	"name": "수량쿠폰", //string
-    	"type": 1, // int32
-    	"count": 100000, // int 32
-    	"startDate": "2023-04-23T15:00:00", // string
-    	"endDate": "2023-05-30T15:00:00", // string
-    	"expireMinute": 7200, // int32
-    	"discountType": 1, // int32
-    	"discountAmount": 50// int32
+    	"name": "수량쿠폰", 
+    	"type": 1, 
+    	"count": 100000,
+    	"startDate": "2023-04-23T15:00:00",
+    	"endDate": "2023-05-30T15:00:00", 
+    	"expireMinute": 7200, 
+    	"discountType": 1, 
+    	"discountAmount": 50
     }
     ```
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 4,
     	"name": "수량쿠폰",
@@ -318,7 +297,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - method: Update
 - Request Body
 
-    ```jsx
+    ```json
     {
     	"couponId": 4, // int32 
     	"name": "수량쿠폰", // string
@@ -334,7 +313,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 4,
     	"name": "수량쿠폰",
@@ -371,7 +350,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - method: Delete
 - Request body
 
-    ```jsx
+    ```json
     {
     	"couponId": 4 //int32 삭제하고자 하는 coupons.id
     }
@@ -379,7 +358,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 4,
     	"name": "수량쿠폰",
@@ -411,45 +390,36 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - method: Give
 - Request Body
 
-    ```jsx
+    ```json
     {
-    	"userId": "user_id_1234", // string 발급하고자 하는 유저 id
-    	"couponId": 1 // int32 발급 받고자 하는 coupon id
+        "userId": "user_id_1234", // string 발급하고자 하는 유저 id
+        "couponId": 1 // int32 발급 받고자 하는 coupon id
     }
     ```
 
 - Response
 
-    ```jsx
+    ```json
     {
-    	"id": 287304,
-    	"userId": "user_id_1234",
-    	"couponId": 1,
-    	"couponNumber": 171370,
-    	"productId": "",
-    	"giveDate": "Sun Apr 30 2023 15:55:40 GMT+0900 (대한민국 표준시)",
-    	"usedDate": "",
-    	"expireDate": "Fri May 05 2023 15:55:40 GMT+0900 (대한민국 표준시)",
-    	"createdAt": "Sun Apr 30 2023 15:55:40 GMT+0900 (대한민국 표준시)",
-    	"updatedAt": "Sun Apr 30 2023 15:55:40 GMT+0900 (대한민국 표준시)",
-    	"deletedAt": ""
+        "isReceived": true
     }
     ```
 
 - 설명
     - 유저의 쿠폰 발급 받기 기능
     - 발급하고자 하는 userId와 발급받고자 하는 couponId를 전송합니다.
-    - 재고가 없는 coupon 일 경우 만료되지 않았으면 발급에 성공합니다.
+    - 쿠폰의 endDate 가 종료되지 않으면 발급 가능합니다.
+    - 쿠폰은 1인당 1개만 발급 가능합니다.
+    - 재고가 없는 coupon 일 경우 발급에 성공합니다.
     - 재고가 존재하는 coupon 일 경우
-        - 동시성 이슈
-        - 동시에 해당 coupon을 발급받았는지, 재고가 존재하는지 체크 한 후 발급합니다.
+        - 재고가 존재하는지 체크 한 후 발급합니다.
 
 ### 유저의 쿠폰 읽기
 
 - method: FindAll
 - Request Body
 
-    ```jsx
+    ```json
     {
     	"userId": "user_id_1234" // string
     	"take": 1 // int32 가져오고자 하는 유저의 쿠폰 개수
@@ -459,7 +429,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"userCouponStorages": [
     		{
@@ -506,7 +476,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - Method: Use
 - Request body
 
-    ```jsx
+    ```json
     {
     	"id": 287304, // int32 userCouponStorages.id
     	"userId": "user_id_1234", //string
@@ -517,7 +487,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 287304,
     	"userId": "user_id_1234",
@@ -547,7 +517,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - method: UseCancel
 - Request Body
 
-    ```jsx
+    ```json
     {
     	"id": 287304, //int32 userCouponStorages.id
     	"userId": "user_id_1234", //string 
@@ -557,7 +527,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 287304,
     	"userId": "user_id_1234",
@@ -585,7 +555,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 - Method: Delete
 - Request Body
 
-    ```jsx
+    ```json
     {
     	"id": 287304, // int32  userCouponStorages.id
     	"userId": "user_id_1234", // userId
@@ -595,7 +565,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
 - Response
 
-    ```jsx
+    ```json
     {
     	"id": 287304,
     	"userId": "user_id_1234",
@@ -628,7 +598,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
     - dotenv-cli
         - env 환경 파일을 위한 설치 필요
 
-```jsx
+```shell
 $ npm i -g jest dotenv-cli
 ```
 
@@ -842,9 +812,4 @@ npm run test
     - vues 가 150~ 200 정도가 최대이며 그이상일 경우 요청이 더이상 늘어나지 않았다.
         - vueser 의 임계점은 150~200 정도이다.
     - 하나의 서버로 요구사항인 최대 RPS 1500은 맞출 수 없었다.
-    - 해결방안
-        - nest js 를 실행할 때 하나의 프로세스만 실행한 것이 문제였던것 같다.
-            - 해당 테스트 노트북은 8개의 CPU를 가지고 있으며 각각 프로세스를 할당하면 테스트가 달라질 것 같다.
-        - cloud scale out
-            - 하나의 서버, CPU 당 150, RPS 100~150 정도를 감당 할 수 있었다.
-            - 2vCPU 기준  5대의 서버로 scale out 한다면 만족 시킬 수 있을것으로 보인다.
+
