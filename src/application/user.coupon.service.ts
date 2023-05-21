@@ -94,7 +94,6 @@ export class UserCouponService implements IUserCouponService {
           userCoupon.id,
           userCoupon.userId,
           userCoupon.couponId,
-          userCoupon.couponNumber,
           userCoupon.productId,
           userCoupon.giveDate,
           userCoupon.usedDate,

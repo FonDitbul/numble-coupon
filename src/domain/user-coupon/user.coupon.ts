@@ -4,7 +4,6 @@ export class UserCoupon {
   readonly id: number;
   readonly userId: string;
   readonly couponId: number;
-  readonly couponNumber: number;
   readonly productId: string | null;
 
   readonly giveDate: Date;
@@ -24,7 +23,6 @@ export class UserCoupon {
     id: number,
     userId: string,
     couponId: number,
-    couponNumber: number,
     productId: string | null,
 
     giveDate: Date,
@@ -43,7 +41,6 @@ export class UserCoupon {
     this.id = id;
     this.userId = userId;
     this.couponId = couponId;
-    this.couponNumber = couponNumber;
     this.productId = productId;
 
     this.giveDate = giveDate;
