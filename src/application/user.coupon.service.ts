@@ -56,23 +56,28 @@ export class UserCouponService implements IUserCouponService {
       discountAmount: coupon.discountAmount,
     };
 
+    if (!Coupon.isWithoutQuantityType(coupon.type)) {
+      const couponStock = await this.couponCacheRepository.countStock(coupon.id);
+
+      if (couponStock >= coupon.count) {
+        throw new Error('재고가 없습니다.');
+      }
+
+      const findOneUserCoupon = await this.userCouponCacheRepository.setGiveUser({ couponId: coupon.id, userId: userId });
+      if (!findOneUserCoupon) {
+        throw new Error('이미 발급된 쿠폰이 존재합니다.');
+      }
+
+      await this.userCouponRepository.giveWithQuantity(userCouponGiveOut);
+      return;
+    }
+
     const findOneUserCoupon = await this.userCouponCacheRepository.setGiveUser({ couponId: coupon.id, userId: userId });
     if (!findOneUserCoupon) {
       throw new Error('이미 발급된 쿠폰이 존재합니다.');
     }
 
-    if (Coupon.isWithoutQuantityType(coupon.type)) {
-      await this.userCouponRepository.giveWithoutQuantity(userCouponGiveOut);
-      return;
-    }
-
-    const couponStock = await this.couponCacheRepository.countStock(coupon.id);
-
-    if (couponStock >= coupon.count) {
-      throw new Error('재고가 없습니다.');
-    }
-
-    await this.userCouponRepository.giveWithQuantity(userCouponGiveOut);
+    await this.userCouponRepository.giveWithoutQuantity(userCouponGiveOut);
     return;
   }
 
