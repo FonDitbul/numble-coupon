@@ -9,8 +9,28 @@ const requestPerGive = new Counter('request_per_give');
 const responsePerGive = new Counter('response_per_give');
 
 export const options = {
-  vus: 1500,
-  duration: '1m',
+  stages: [
+    { duration: '30s', target: 100 },
+    { duration: '30s', target: 200 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 400 },
+    { duration: '30s', target: 500 },
+    { duration: '30s', target: 600 },
+    { duration: '30s', target: 700 },
+    { duration: '30s', target: 800 },
+    { duration: '30s', target: 900 },
+    { duration: '30s', target: 1000 },
+    { duration: '30s', target: 900 },
+    { duration: '30s', target: 800 },
+    { duration: '30s', target: 700 },
+    { duration: '30s', target: 600 },
+    { duration: '30s', target: 500 },
+    { duration: '30s', target: 400 },
+    { duration: '30s', target: 300 },
+    { duration: '30s', target: 200 },
+    { duration: '30s', target: 100 },
+  ],
 };
 
 export default () => {
