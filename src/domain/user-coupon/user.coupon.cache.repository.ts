@@ -1,8 +1,4 @@
-import {
-  IUserCouponCacheFindOneOut,
-  IUserCouponCacheSaveOut,
-  IUserCouponCacheSetGiveUserOut,
-} from './user.coupon.out';
+import { IUserCouponCacheFindOneOut, IUserCouponCacheSaveOut, IUserCouponCacheSetGiveUserOut } from './user.coupon.out';
 
 export class IUserCouponCacheRepository {
   findOneByCouponIdAndUserId: (findOneOut: IUserCouponCacheFindOneOut) => Promise<boolean>;
