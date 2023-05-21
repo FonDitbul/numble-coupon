@@ -8,6 +8,11 @@ import { TestDatabase } from './test.database.e2e';
 import { Coupon, COUPON_PREDEFINE } from '../src/domain/coupon/coupon';
 import * as dateFns from 'date-fns';
 import { UserCoupon } from '../src/domain/user-coupon/user.coupon';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
+
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '../.env.test' });
 
 describe('AppController (e2e)', () => {
   let client: ClientGrpcProxy;
@@ -18,7 +23,16 @@ describe('AppController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [CouponModule, UserCouponModule],
+      imports: [
+        CouponModule,
+        UserCouponModule,
+        RedisModule.forRoot({
+          config: {
+            host: process.env.REDIS_HIST,
+            port: +process.env.REDIS_PORT,
+          },
+        }),
+      ],
     }).compile();
 
     const app: INestMicroservice = moduleFixture.createNestMicroservice<MicroserviceOptions>({
@@ -149,11 +163,44 @@ describe('AppController (e2e)', () => {
   });
 
   describe('User Coupon test', () => {
+    const testWithQuantityCouponName = 'createdCouponQuantityForTest';
+    const testCouponNameWithoutQuantity = 'createdCouponWithoutQuantityForTest';
+
+    beforeAll(async () => {
+      const createCouponQuantity = {
+        name: testWithQuantityCouponName,
+        type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+        count: 50000,
+
+        startDate: new Date().toISOString(),
+        endDate: dateFns.addDays(new Date(), 7).toISOString(),
+        expireMinute: 7200,
+
+        discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_RATE,
+        discountAmount: 50,
+      };
+
+      const createCouponWithoutQuantity = {
+        name: testCouponNameWithoutQuantity,
+        type: COUPON_PREDEFINE.TYPE_WITHOUT_QUANTITY,
+        count: 0,
+
+        startDate: new Date().toISOString(),
+        endDate: dateFns.addDays(new Date(), 7).toISOString(),
+        expireMinute: 7200,
+
+        discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_RATE,
+        discountAmount: 50,
+      };
+      await clientCouponService.Create(createCouponQuantity).toPromise();
+      await clientCouponService.Create(createCouponWithoutQuantity).toPromise();
+    });
+
     describe('유저 쿠폰 발급 테스트', () => {
       test('유저 수량 쿠폰 발급 성공', async () => {
-        const coupon = await testDatabase.findOneByName(testDatabase.withQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testWithQuantityCouponName);
 
-        const givenUserId = 'testUserByGive';
+        const givenUserId = 'testUserByGive_1';
         const givenCouponId = coupon.id;
 
         const giveReq = {
@@ -162,16 +209,13 @@ describe('AppController (e2e)', () => {
         };
         const sut = await clientUserCouponService.Give(giveReq).toPromise();
 
-        expect(sut.userId).toEqual(givenUserId);
-        expect(sut.couponId).toEqual(givenCouponId);
-        expect(sut.productId).toBeFalsy();
-        expect(sut.usedDate).toBeFalsy();
+        expect(sut.isReceived).toBeTruthy();
       });
 
       test('유저 수량 없는 쿠폰 발급 성공', async () => {
-        const coupon = await testDatabase.findOneByName(testDatabase.withoutQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testCouponNameWithoutQuantity);
 
-        const givenUserId = 'testUserByGive';
+        const givenUserId = 'testUserByGive_2';
         const givenCouponId = coupon.id;
 
         const giveReq = {
@@ -180,12 +224,7 @@ describe('AppController (e2e)', () => {
         };
         const sut = await clientUserCouponService.Give(giveReq).toPromise();
 
-        expect(sut.userId).toEqual(givenUserId);
-        expect(sut.couponId).toEqual(givenCouponId);
-        expect(sut.couponNumber).toEqual(0);
-        expect(sut.couponId).toEqual(givenCouponId);
-        expect(sut.productId).toBeFalsy();
-        expect(sut.usedDate).toBeFalsy();
+        expect(sut.isReceived).toBeTruthy();
       });
     });
 
@@ -194,7 +233,7 @@ describe('AppController (e2e)', () => {
 
       beforeEach(async () => {
         // default 쿠폰 발급
-        const coupon = await testDatabase.findOneByName(testDatabase.withoutQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testCouponNameWithoutQuantity);
         const givenCouponId = coupon.id;
 
         const giveReq = {
@@ -226,7 +265,7 @@ describe('AppController (e2e)', () => {
 
       beforeEach(async () => {
         // default 쿠폰 발급
-        const coupon = await testDatabase.findOneByName(testDatabase.withoutQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testCouponNameWithoutQuantity);
         givenCouponId = coupon.id;
 
         const giveReq = {
@@ -270,7 +309,7 @@ describe('AppController (e2e)', () => {
 
       beforeEach(async () => {
         // default 쿠폰 발급
-        const coupon = await testDatabase.findOneByName(testDatabase.withoutQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testCouponNameWithoutQuantity);
         givenCouponId = coupon.id;
 
         const giveReq = {
@@ -319,7 +358,7 @@ describe('AppController (e2e)', () => {
 
       beforeEach(async () => {
         // default 쿠폰 발급
-        const coupon = await testDatabase.findOneByName(testDatabase.withoutQuantityCouponName);
+        const coupon = await testDatabase.findOneByName(testCouponNameWithoutQuantity);
         givenCouponId = coupon.id;
 
         const giveReq = {

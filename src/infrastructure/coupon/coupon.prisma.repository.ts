@@ -15,9 +15,6 @@ export class CouponPrismaRepository implements ICouponRepository {
   async findOneWithStockById(id: number): Promise<Coupon> {
     return await this.prisma.coupons.findFirst({
       where: { id: id, deletedAt: null },
-      include: {
-        CouponsStock: true,
-      },
     });
   }
 
@@ -38,9 +35,6 @@ export class CouponPrismaRepository implements ICouponRepository {
         },
         deletedAt: null,
       },
-      include: {
-        CouponsStock: true,
-      },
     });
   }
 
@@ -49,14 +43,6 @@ export class CouponPrismaRepository implements ICouponRepository {
       const createdCoupon = await transaction.coupons.create({
         data: {
           ...couponCreateOut,
-        },
-      });
-
-      await transaction.couponsStock.create({
-        data: {
-          couponId: createdCoupon.id,
-          count: createdCoupon.count,
-          version: 0,
         },
       });
 
@@ -120,68 +106,39 @@ export class CouponPrismaRepository implements ICouponRepository {
   }
 
   async updateWithQuantity(couponUpdateOut: CouponUpdateOut): Promise<Coupon> {
-    try {
-      return await this.prisma.$transaction(
-        async (transaction) => {
-          const beforeCouponStock = await transaction.couponsStock.findFirstOrThrow({
-            select: { id: true, count: true },
-            where: {
-              couponId: couponUpdateOut.couponId,
-            },
-          });
-
-          const sumCount = beforeCouponStock.count + couponUpdateOut.count;
-
-          const updatedCoupon = await transaction.coupons.update({
-            where: {
-              id: couponUpdateOut.couponId,
-            },
-            data: {
-              name: couponUpdateOut.name,
-              count: sumCount,
-              startDate: couponUpdateOut.startDate,
-              endDate: couponUpdateOut.endDate,
-              expireMinute: couponUpdateOut.expireMinute,
-              discountType: couponUpdateOut.discountType,
-              discountAmount: couponUpdateOut.discountAmount,
-            },
-          });
-
-          await transaction.couponsStock.update({
-            where: {
-              id: beforeCouponStock.id,
-            },
-            data: {
-              count: sumCount,
-            },
-          });
-
-          await transaction.couponsHistory.create({
-            data: {
-              couponId: couponUpdateOut.couponId,
-              name: couponUpdateOut.name,
-              type: couponUpdateOut.type,
-              count: sumCount,
-              startDate: couponUpdateOut.startDate,
-              endDate: couponUpdateOut.endDate,
-              expireMinute: couponUpdateOut.expireMinute,
-              discountType: couponUpdateOut.discountType,
-              discountAmount: couponUpdateOut.discountAmount,
-              description: '쿠폰 업데이트',
-            },
-          });
-
-          return updatedCoupon;
+    return await this.prisma.$transaction(async (transaction) => {
+      const updatedCoupon = await transaction.coupons.update({
+        where: {
+          id: couponUpdateOut.couponId,
         },
-        {
-          maxWait: 5000, // default: 2000
-          timeout: 10000, // default: 5000
+        data: {
+          name: couponUpdateOut.name,
+          count: couponUpdateOut.count,
+          startDate: couponUpdateOut.startDate,
+          endDate: couponUpdateOut.endDate,
+          expireMinute: couponUpdateOut.expireMinute,
+          discountType: couponUpdateOut.discountType,
+          discountAmount: couponUpdateOut.discountAmount,
         },
-      );
-    } catch (e) {
-      this.prisma.$disconnect();
-      throw e;
-    }
+      });
+
+      await transaction.couponsHistory.create({
+        data: {
+          couponId: couponUpdateOut.couponId,
+          name: couponUpdateOut.name,
+          type: couponUpdateOut.type,
+          count: couponUpdateOut.count,
+          startDate: couponUpdateOut.startDate,
+          endDate: couponUpdateOut.endDate,
+          expireMinute: couponUpdateOut.expireMinute,
+          discountType: couponUpdateOut.discountType,
+          discountAmount: couponUpdateOut.discountAmount,
+          description: '쿠폰 업데이트',
+        },
+      });
+
+      return updatedCoupon;
+    });
   }
 
   async delete(couponId: number): Promise<Coupon> {
@@ -194,17 +151,6 @@ export class CouponPrismaRepository implements ICouponRepository {
           deletedAt: new Date(),
         },
       });
-
-      if (deletedCoupon.type === COUPON_PREDEFINE.TYPE_WITH_QUANTITY) {
-        await transaction.couponsStock.update({
-          where: {
-            couponId: couponId,
-          },
-          data: {
-            deletedAt: new Date(),
-          },
-        });
-      }
 
       await transaction.couponsHistory.create({
         data: {

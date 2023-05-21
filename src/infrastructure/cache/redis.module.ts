@@ -1,21 +1,17 @@
-import { CacheModule, Module } from '@nestjs/common';
-import * as redisStore from 'cache-manager-redis-store';
+import { Module } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-import { RedisCacheService } from './redis.service';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
+
 dotenv.config();
 
-const cacheModule = CacheModule.register({
-  useFactory: async () => ({
-    store: redisStore,
-    host: process.env.REDIS_HOST, // env에서 정의함
-    port: process.env.REDIS_PORT, // env에서 정의함
-    ttl: 1000, // 캐시 유지 시간
-  }),
-});
-
 @Module({
-  imports: [cacheModule],
-  providers: [{ provide: 'ICache', useClass: RedisCacheService }],
-  exports: [{ provide: 'ICache', useClass: RedisCacheService }],
+  imports: [
+    RedisModule.forRoot({
+      config: {
+        host: process.env.REDIS_HIST,
+        port: +process.env.REDIS_PORT,
+      },
+    }),
+  ],
 })
 export class RedisCacheModule {}

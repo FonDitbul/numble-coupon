@@ -84,16 +84,12 @@ export default () => {
   // });
 
   group('유저의 쿠폰 수량 발급 받기', () => {
-    const couponArrayResponse = client.invoke('coupon.CouponService/FindAll', {});
-
-    const oneCoupon = couponArrayResponse.message.coupons.find((coupon) => coupon.type == 1); // 수량 쿠폰인 경우
-
-    const randUser_0_100 = Math.floor(Math.random() * 1000001);
+    const randUser_0_100 = Math.floor(Math.random() * 100);
     const userId = `user_${randUser_0_100}`;
 
     const data = {
       userId: userId,
-      couponId: oneCoupon.id,
+      couponId: 1,
     };
 
     const couponGiveRes = client.invoke('user_coupon.UserCouponService/Give', data);

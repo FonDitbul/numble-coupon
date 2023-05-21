@@ -44,25 +44,16 @@ export class TestDatabase {
         name: 'couponWithQuantity',
       },
     });
-
-    await this.prismaClient.couponsStock.create({
-      data: {
-        couponId: quantityStock.id,
-        count: quantityStock.count,
-        version: 0,
-      },
-    });
   }
 
   // 전체 DB 삭제
   async deleteAll() {
     const coupon = this.prismaClient.coupons.deleteMany();
-    const couponStock = this.prismaClient.couponsStock.deleteMany();
     const couponHistory = this.prismaClient.couponsHistory.deleteMany();
     const userCouponStorage = this.prismaClient.userCouponsStorage.deleteMany();
     const userCouponStorageHistory = this.prismaClient.userCouponsStorageHistory.deleteMany();
 
-    await this.prismaClient.$transaction([coupon, couponStock, couponHistory, userCouponStorage, userCouponStorageHistory]);
+    await this.prismaClient.$transaction([coupon, couponHistory, userCouponStorage, userCouponStorageHistory]);
 
     await this.prismaClient.$disconnect();
   }

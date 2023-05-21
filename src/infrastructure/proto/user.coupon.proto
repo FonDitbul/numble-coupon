@@ -1,13 +1,18 @@
 syntax = "proto3";
 
+
 package user_coupon;
 
 service UserCouponService {
-  rpc Give (GiveCoupon) returns (UserCouponStorage) {}
+  rpc Give (GiveCoupon) returns (GiveCouponRes) {}
   rpc FindAll (FindAllQuery) returns (stream userCouponStorages) {}
   rpc Use (UseUserCoupon) returns (UserCouponStorage) {}
   rpc UseCancel (UseCancelUserCoupon) returns (UserCouponStorage) {}
   rpc Delete (DeleteUserCoupon) returns (UserCouponStorage) {}
+}
+
+message GiveCouponRes {
+  bool isReceived = 1;
 }
 
 message GiveCoupon {

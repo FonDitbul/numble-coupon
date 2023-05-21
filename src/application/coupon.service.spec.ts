@@ -4,14 +4,13 @@ import { mock, MockProxy, mockReset } from 'jest-mock-extended';
 import { ICouponRepository } from '../domain/coupon/coupon.repository';
 import { Coupon, COUPON_PREDEFINE } from '../domain/coupon/coupon';
 import { CouponCreateIn, CouponUpdateIn } from '../domain/coupon/coupon.in';
-import { ICouponStockRepository } from '../domain/coupon/coupon.stock.repository';
-import { CouponStock } from '../domain/coupon/coupon.stock';
+import { ICouponCacheRepository } from '../domain/coupon/coupon.cache.repository';
 
 describe('Coupon Service test  ', () => {
   const couponRepository: MockProxy<ICouponRepository> = mock<ICouponRepository>();
-  const couponStockRepository: MockProxy<ICouponStockRepository> = mock<ICouponStockRepository>();
+  const couponCacheRepository: MockProxy<ICouponCacheRepository> = mock<ICouponCacheRepository>();
 
-  const sut: ICouponService = new CouponService(couponRepository, couponStockRepository);
+  const sut: ICouponService = new CouponService(couponRepository, couponCacheRepository);
 
   // mock clear
   beforeEach(() => {
@@ -35,13 +34,12 @@ describe('Coupon Service test  ', () => {
           updatedAt: new Date(),
           deletedAt: null,
         };
-        const givenCouponStock: CouponStock = new CouponStock(1, 1, 3, 1, new Date(), new Date());
         couponRepository.findAll.mockResolvedValue([givenCoupon]);
-        couponStockRepository.findOneByCouponId.calledWith(givenCoupon.id).mockResolvedValue(givenCouponStock);
+        couponCacheRepository.countStock.calledWith(givenCoupon.id).mockResolvedValue(1);
 
         const result = await sut.findAll();
 
-        expect(result[0].CouponsStock).toBeTruthy();
+        expect(result[0].couponStock).toBe(1);
       });
 
       test('수량이 존재하지 않는 쿠폰일 경우', async () => {
@@ -59,12 +57,11 @@ describe('Coupon Service test  ', () => {
           updatedAt: new Date(),
           deletedAt: null,
         };
-        const givenCouponStock: CouponStock = new CouponStock(1, 1, 3, 1, new Date(), new Date());
         couponRepository.findAll.mockResolvedValue([givenCoupon]);
 
         const result = await sut.findAll();
 
-        expect(result[0].CouponsStock).toBeFalsy();
+        expect(result[0].couponStock).toBeFalsy();
       });
     });
   });
@@ -82,6 +79,21 @@ describe('Coupon Service test  ', () => {
           discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_RATE,
           discountAmount: 50,
         };
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 1500,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_RATE,
+          discountAmount: 50,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        couponRepository.createWithQuantity.mockResolvedValue(givenCoupon);
 
         const result = await sut.create(givenCouponCreateIn);
 
@@ -100,6 +112,21 @@ describe('Coupon Service test  ', () => {
           discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
           discountAmount: 5000,
         };
+        const givenCoupon: Coupon = {
+          id: 1,
+          name: '테스트 쿠폰',
+          type: COUPON_PREDEFINE.TYPE_WITH_QUANTITY,
+          count: 1500,
+          startDate: new Date(),
+          endDate: new Date(),
+          expireMinute: 6000,
+          discountType: COUPON_PREDEFINE.DISCOUNT_TYPE_AMOUNT,
+          discountAmount: 50,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        };
+        couponRepository.createWithQuantity.mockResolvedValue(givenCoupon);
 
         const result = await sut.create(givenCouponCreateIn);
 

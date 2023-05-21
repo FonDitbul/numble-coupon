@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \\\\\\\"src/**/*.ts\\\\\\\" \\\\\\\"test/**/*.ts\\\\\\\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "dotenv -e .env -- nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -29,6 +29,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.8.14",
     "@grpc/proto-loader": "^0.7.6",
+    "@liaoliaots/nestjs-redis": "^9.0.5",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.4.0",
     "@nestjs/microservices": "^9.4.0",
@@ -38,8 +39,9 @@
     "@types/cache-manager-redis-store": "^2.0.1",
     "cache-manager": "^4.1.0",
     "cache-manager-redis-store": "^3.0.1",
-    "date-fns": "^2.29.3",
+    "date-fns": "^2.0.0-beta.5",
     "dotenv": "^16.0.3",
+    "ioredis": "^5.3.2",
     "jest-mock-extended": "^3.0.4",
     "prisma": "^4.13.0",
     "reflect-metadata": "^0.1.13",

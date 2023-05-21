@@ -1,5 +1,3 @@
-import { CouponStock } from './coupon.stock';
-
 export class Coupon {
   id: number;
   name: string;
@@ -17,7 +15,7 @@ export class Coupon {
   updatedAt: Date;
   deletedAt: Date | null;
 
-  CouponsStock?: CouponStock;
+  couponStock?: number;
 
   static isExistCoupon(coupon: Coupon) {
     return !coupon;
