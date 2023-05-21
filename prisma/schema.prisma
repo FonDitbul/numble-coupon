@@ -59,7 +59,6 @@ model UserCouponsStorage {
   userId String @map("user_id")
   couponId Int @map("coupon_id")
 
-  couponNumber Int @map("coupon_number")
   productId String? @map("product_id")
 
   giveDate DateTime @map("give_date")
