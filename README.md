@@ -1,7 +1,7 @@
 # [Numble] E-commerce 마이크로 서비스 설계 딥다이브
 
-# 2023-05-21 개선
-
+# 2023-05-21 성능 개선 회고록 
+https://velog.io/@fadfad_/numble-coupon-%EC%84%B1%EB%8A%A5-%EA%B0%9C%EC%84%A0-%ED%9B%84%EA%B8%B0
 
 ----
 ## 제출 회고록
@@ -13,9 +13,11 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 
    2.1 디자인 아키텍처
 
-   2.2 DB
+   2.2 application 아키텍처
 
-   2.3 API
+   2.3 DB
+
+   2.4 API
 
 3. Installation
 
@@ -83,6 +85,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 | Performance Test | k6 | grafana |  |
 | Other | gRPC | npm | github action |
 
+
 # 2.1 디자인 아키텍처
 
 ![Untitled Diagram drawio](https://user-images.githubusercontent.com/49264688/235345880-a24eeecb-2563-49ec-9b3e-32b71e23e585.png)
@@ -91,7 +94,39 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
     - Redis 는 '유저에게 쿠폰 발급'시 발급 가능한 상태인지 확인하기 위해 사용됩니다.
     - 쿠폰 발급 시 RDB 는 데이터 write 을 책임지고 이외에는 redis 에서 사용합니다.
 
-# 2.2 Database
+
+# 2.2 Application 아키텍처
+* '클린 아키텍처' 에 따라 각 레이어 별로 역할을 분리하여 구성하였습니다.
+* 각 계층이 가지고 있는 의존성은 다른 계층들에서 알 수 없도록 분리하며 목적에 따라 책임 logic을 전가하였습니다.
+* numble-coupon repository의 폴더 구조와 역할은 다음과 같습니다.
+
+## api-g-rpc
+* controller 계층 
+* gRPC 통신을 사용하기 때문에 폴더에 g-rpc 네이밍 사용 
+* 유저의 요청과 응답에 대한 역할을 책임집니다. 
+* controller, req.dto, res.dto 등의 파일 컨벤션을 사용하여 작성하였습니다. 
+
+
+## application
+* service 계층 
+* 주요 비즈니스 로직에 대한 역할을 가집니다.
+* 비즈니스 로직은 외부 의존성에 영향을 받지 않도록 처리하였습니다. 
+
+
+## domain
+* domain 계층 
+* 핵심 인터페이스
+* 어떠한 의존성도 갖지 않는 독립적 계층으로 구현
+* 주로 변하지 않는 '핵심 로직'에 대해서 구현
+
+
+## infrastructure
+* infrastructure 계층 
+* controller 혹은 repository 등의 실제 구현체 레이어 
+   * ex) prisma, Database (RDB, Redis) 등 
+* domain의 인터페이스, 의존되어 있는 부분은 infrastructure 계층을 통해 구현하며, DI 를 통해 의존성을 분리시킵니다. 
+
+# 2.3 Database
 
 ## ERD
 
@@ -173,7 +208,7 @@ https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C
 | updated_at | timestamp(3) | true | 레코드 업데이트 시간 |
 | deleted_at | timestamp(3) | false | 레코드 삭제 시간 |
 
-# 2.3 API
+# 2.4 API
 
 - 특이사항
     - body 의 date는 string으로 아래와 같은 형식으로 받습니다.
