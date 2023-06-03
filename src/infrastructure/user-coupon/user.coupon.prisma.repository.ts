@@ -51,49 +51,10 @@ export class UserCouponPrismaRepository implements IUserCouponRepository {
 
   async giveWithQuantity(giveOut: IUserCouponGiveOut): Promise<UserCoupon> {
     return await this.prisma.$transaction(async (transaction) => {
-      // const beforeUserCoupon = await transaction.userCouponsStorage.findFirst({
-      //   where: {
-      //     couponId: giveOut.couponId,
-      //     userId: giveOut.userId,
-      //     productId: null,
-      //     usedDate: null,
-      //     expireDate: { gt: new Date() },
-      //     deletedAt: null,
-      //   },
-      // });
-      //
-      // if (beforeUserCoupon) {
-      //   throw new Error('중복 발급입니다.');
-      // }
-      //
-      // const couponStock = await transaction.couponsStock.findFirstOrThrow({
-      //   where: {
-      //     couponId: giveOut.couponId,
-      //   },
-      // });
-      //
-      // const updatedStockCount = couponStock.count - 1;
-      // const stockUpdateCount = await transaction.couponsStock.update({
-      //   data: {
-      //     count: updatedStockCount,
-      //     version: {
-      //       increment: 1,
-      //     },
-      //   },
-      //   where: {
-      //     id: couponStock.id,
-      //   },
-      // });
-      //
-      // if (couponStock.count - 1 !== stockUpdateCount.count || stockUpdateCount.count < 0) {
-      //   throw new Error('동시성 에러');
-      // }
-
       return await transaction.userCouponsStorage.create({
         data: {
           userId: giveOut.userId,
           couponId: giveOut.couponId,
-          couponNumber: 0,
           giveDate: giveOut.giveDate,
           expireDate: giveOut.expireDate,
           discountType: giveOut.discountType,
