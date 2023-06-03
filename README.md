@@ -6,6 +6,10 @@ https://velog.io/@fadfad_/numble-coupon-%EC%84%B1%EB%8A%A5-%EA%B0%9C%EC%84%A0-%E
 ----
 ## 제출 회고록
 https://velog.io/@fadfad_/Numble-E-commerce-%EB%A7%88%EC%9D%B4%ED%81%AC%EB%A1%9C-%EC%84%9C%EB%B9%84%EC%8A%A4-%EC%84%A4%EA%B3%84-%EB%94%A5%EB%8B%A4%EC%9D%B4%EB%B8%8C-%ED%9A%8C%EA%B3%A0%EB%A1%9D
+
+# numble 가이드라인 링크
+https://www.notion.so/gweongi/E-commerce-7b52226463074ef08430aaf7ba8fc3d0?pvs=4
+
 # 목차
 
 1. 요구사항 정리
